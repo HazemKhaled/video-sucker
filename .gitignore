@@ -20,6 +20,10 @@
 # production
 /build
 
+# video files
+/public/tiktok/*
+!/public/tiktok/.gitkeep
+
 # misc
 .DS_Store
 *.pem
