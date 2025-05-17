@@ -73,3 +73,10 @@ Create a full-featured TikTok video downloader with a user-friendly interface th
 2. Verify that all fallback methods work correctly
 3. Test error scenarios and ensure they're handled gracefully
 4. Check browser compatibility across Chrome, Firefox, and Safari
+
+## Unit Testing
+
+1. Write unit tests for the `tiktok-video-downloader` package
+2. Test all functions, especially the video download methods
+3. Use Jest
+4. Ensure all tests pass before merging changes
