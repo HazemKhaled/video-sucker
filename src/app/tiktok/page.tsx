@@ -3,6 +3,7 @@
 import { useState } from "react";
 import styles from "./tiktok.module.css";
 import Link from "next/link";
+import Image from "next/image";
 
 interface TikTokData {
   video: string;
@@ -187,15 +188,17 @@ export default function TikTokPage() {
               
               {showThumbnailPreview && tiktokData.thumbnail && (
                 <div className={styles.thumbnailPreviewContainer}>
-                  <h3>Video Thumbnail</h3>
-                  <div 
+                  <h3>Video Thumbnail</h3>                    <div 
                     className={styles.thumbnailWrapper}
                     onClick={() => setEnlargedThumbnail(!enlargedThumbnail)}
                   >
-                    <img 
+                    <Image 
                       src={tiktokData.thumbnail} 
                       alt="Video thumbnail" 
-                      className={styles.thumbnailPreview} 
+                      className={styles.thumbnailPreview}
+                      width={250}
+                      height={350} 
+                      unoptimized
                     />
                     <div className={styles.thumbnailOverlay}>
                       <span>{enlargedThumbnail ? 'Click to shrink' : 'Click to enlarge'}</span>
@@ -220,10 +223,13 @@ export default function TikTokPage() {
               {enlargedThumbnail && tiktokData.thumbnail && (
                 <div className={styles.enlargedThumbnailContainer} onClick={() => setEnlargedThumbnail(false)}>
                   <div className={styles.enlargedThumbnailWrapper}>
-                    <img 
+                    <Image 
                       src={tiktokData.thumbnail} 
                       alt="Enlarged thumbnail" 
-                      className={styles.enlargedThumbnail} 
+                      className={styles.enlargedThumbnail}
+                      width={500}
+                      height={700}
+                      unoptimized
                     />
                     <button 
                       className={styles.closeEnlargedButton}

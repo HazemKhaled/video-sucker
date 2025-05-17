@@ -1,0 +1,26 @@
+{
+  "name": "tiktok-video-downloader",
+  "version": "0.1.0",
+  "description": "A package to download TikTok videos and thumbnails",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "tiktok",
+    "video",
+    "downloader",
+    "thumbnail"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.1"
+  }
+}

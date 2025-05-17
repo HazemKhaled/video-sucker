@@ -1,36 +1,120 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Video Sucker Monorepo
+
+A monorepo for video downloading applications, built with Next.js and PNPM workspaces.
+
+## Repository Structure
+
+```
+video-sucker/
+├── packages/                 # Shared packages
+│   ├── tiktok-video-downloader/  # Standalone package for TikTok video downloading
+│   │   ├── src/                  # Package source code
+│   │   └── package.json          # Package configuration
+├── public/                   # Public assets
+│   └── tiktok/               # Downloaded TikTok videos and thumbnails
+├── src/                      # Main Next.js application source
+│   └── app/                  # App router pages and API routes
+│       ├── api/              # API endpoints
+│       │   └── tiktok/       # TikTok API endpoint
+│       └── tiktok/           # TikTok video downloader page
+└── package.json              # Main workspace configuration
+```
+
+## Packages
+
+### tiktok-video-downloader
+
+A standalone Node.js package for downloading TikTok videos with multiple fallback methods to ensure reliability. This package can be used independently in other projects.
+
+#### Features:
+- Extract video ID and username from TikTok URLs
+- Download videos and thumbnails
+- Multiple fallback methods for better reliability
+- TypeScript support
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 16+
+- PNPM
+
+### Installation
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Install dependencies
+pnpm install
+
+# Build packages
+pnpm run build:packages
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Development
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# Start the development server
+pnpm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Open [http://localhost:3000/tiktok](http://localhost:3000/tiktok) with your browser to see the TikTok downloader.
+
+### Build
+
+```bash
+# Build the entire project (packages + Next.js app)
+pnpm run build
+```
+
+### Production
+
+```bash
+# Start the production server
+pnpm run start
+```
+
+## Usage
+
+1. Open the TikTok page at `/tiktok`
+2. Enter a TikTok URL or click the example link
+3. The video will be downloaded and displayed
+4. You can download the video and thumbnail
+
+## Features
+
+- Download TikTok videos from URL
+- View video in the browser
+- Download video files
+- Preview and download thumbnails
+- Multiple fallback methods for reliable downloads
+- Clean UI with responsive design
+
+## Using the Package in Other Projects
+
+```bash
+# Install from the monorepo
+npm install tiktok-video-downloader
+
+# Or from GitHub
+npm install github:username/video-sucker#packages/tiktok-video-downloader
+```
+
+```javascript
+import { downloadTikTokVideo } from 'tiktok-video-downloader';
+
+// Download a TikTok video
+const result = await downloadTikTokVideo('https://www.tiktok.com/@username/video/1234567890', {
+  outputDir: './downloads'
+});
+
+console.log('Video downloaded to:', result.video);
+console.log('Thumbnail downloaded to:', result.thumbnail);
+```
 
 ## Learn More
 
-To learn more about Next.js, take a look at the following resources:
+- [PNPM Workspaces](https://pnpm.io/workspaces)
+- [Next.js Documentation](https://nextjs.org/docs)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## License
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
