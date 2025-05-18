@@ -15,7 +15,7 @@ export default function Home() {
         
         <Link href="/instagram" className={styles.card}>
           <h2>Instagram &rarr;</h2>
-          <p>Download videos and images from Instagram.</p>
+          <p>Download reels from Instagram.</p>
         </Link>
       </div>
     </div>

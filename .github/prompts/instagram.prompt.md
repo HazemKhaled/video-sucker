@@ -6,7 +6,7 @@ mode: "agent"
 
 ## Objective
 
-Create a comprehensive Instagram video downloader with a polished user interface that enables users to paste Instagram post links, preview videos directly in the browser, and download them for offline viewing. Support for reels, posts, and stories should be included.
+Create a comprehensive Instagram video downloader with a polished user interface that enables users to paste Instagram reel links, preview videos directly in the browser, and download them for offline viewing. Support for reels only.
 
 ## Architecture Requirements
 
@@ -22,16 +22,16 @@ Create a comprehensive Instagram video downloader with a polished user interface
    - `package.json` - Configure as ESM module with proper dependencies
    - `tsconfig.json` - Set up TypeScript configuration for the package
    - `src/downloader.ts` - Implement multiple methods for video download with fallbacks
-   - `src/parser.ts` - Extract metadata and media URLs from Instagram posts
+   - `src/parser.ts` - Extract metadata and media URLs from Instagram reels
    - `src/index.ts` - Export the public API
    - `README.md` - Document usage and installation instructions
 
 2. Core functionality should include:
-   - Parsing different types of Instagram URLs (posts, reels, stories)
-   - Extracting video IDs, media URLs, and post metadata
+   - Parsing different types of Instagram URLs (reels only)
+   - Extracting video IDs, media URLs, and reel metadata
    - Multiple approaches to bypass Instagram's download restrictions
    - Saving video, image, and thumbnail files to a specified location
-   - Handling multi-media posts (carousels with multiple images/videos)
+   - Handling multi-media reels (carousels with multiple images/videos)
    - Comprehensive error handling with descriptive messages
    - TypeScript interfaces for all inputs and outputs
 
@@ -44,18 +44,18 @@ Create a comprehensive Instagram video downloader with a polished user interface
    - Submit button with Instagram-themed loading state
    - Informative error handling with user-friendly messages
    - Video player with playback controls for previewing content
-   - Media carousel for posts with multiple items
+   - Media carousel for reels with multiple items
    - Thumbnail gallery with preview functionality
    - Metadata display (username, caption, likes, comments count if available)
    - Download buttons for video, images, and thumbnails
-   - Example Instagram links for different content types (post, reel, story)
+   - Example Instagram links for reels
 
 3. API Implementation:
    - Create a new API route at `/api/instagram`
    - Accept POST requests with Instagram URLs
    - Use the `instagram-video-downloader` package to process the media
    - Return media paths, thumbnail paths, and comprehensive metadata
-   - Support batch processing for carousel posts
+   - Support batch processing for carousel reels
    - Handle rate limiting and errors gracefully with descriptive messages
 
 ## Styling and User Experience
@@ -85,9 +85,9 @@ Create a comprehensive Instagram video downloader with a polished user interface
 
 ## Testing Instructions
 
-1. Test with various Instagram links including posts, reels, stories, and carousels
+1. Test with various Instagram reels links, and don't include stories or reels
 2. Verify all fallback methods work correctly when primary methods fail
-3. Test error scenarios including invalid URLs, deleted posts, and private accounts
+3. Test error scenarios including invalid URLs, deleted reels, and private accounts
 4. Verify the downloader works with different media types (video, image, carousel)
 5. Check browser compatibility across Chrome, Firefox, Safari, and mobile browsers
 
