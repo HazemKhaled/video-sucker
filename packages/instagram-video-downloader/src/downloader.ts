@@ -61,21 +61,21 @@ async function downloadFile(url: string, outputPath: string, userAgent?: string)
 }
 
 /**
- * Downloads all media items from an Instagram post
+ * Downloads all media items from an Instagram reel
  */
 async function downloadMediaItems(
   postInfo: InstagramPostInfo, 
   outputDir: string
 ): Promise<void> {
-  const { postId, mediaItems } = postInfo;
-  const postDir = path.join(outputDir, 'instagram', postId);
+  const { reelId, mediaItems } = postInfo;
+  const reelDir = path.join(outputDir, 'instagram', reelId);
   
   // Ensure the output directory exists
-  await fs.ensureDir(postDir);
+  await fs.ensureDir(reelDir);
   
   // Save metadata
   await fs.writeJson(
-    path.join(postDir, 'metadata.json'), 
+    path.join(reelDir, 'metadata.json'), 
     {
       ...postInfo,
       downloadedAt: new Date().toISOString()
@@ -87,8 +87,8 @@ async function downloadMediaItems(
   for (let i = 0; i < mediaItems.length; i++) {
     const item = mediaItems[i];
     const fileIndex = mediaItems.length > 1 ? `_${i + 1}` : '';
-    const mediaFileName = item.type === 'video' ? `video${fileIndex}.mp4` : `image${fileIndex}.jpg`;
-    const mediaPath = path.join(postDir, mediaFileName);
+    const mediaFileName = `video${fileIndex}.mp4`;
+    const mediaPath = path.join(reelDir, mediaFileName);
     
     // Add the file name to the media item for reference
     item.fileName = mediaFileName;
@@ -99,7 +99,7 @@ async function downloadMediaItems(
     // Download the thumbnail if it exists and is different from the media URL
     if (item.thumbnailUrl && item.thumbnailUrl !== item.url) {
       const thumbnailFileName = `thumbnail${fileIndex}.jpg`;
-      const thumbnailPath = path.join(postDir, thumbnailFileName);
+      const thumbnailPath = path.join(reelDir, thumbnailFileName);
       await downloadFile(item.thumbnailUrl, thumbnailPath);
     }
   }
@@ -108,8 +108,8 @@ async function downloadMediaItems(
   postInfo.savedFiles = mediaItems.map((item, index) => {
     const fileIndex = mediaItems.length > 1 ? `_${index + 1}` : '';
     return {
-      mediaPath: `/instagram/${postId}/${item.fileName}`,
-      thumbnailPath: item.thumbnailUrl ? `/instagram/${postId}/thumbnail${fileIndex}.jpg` : undefined
+      mediaPath: `/instagram/${reelId}/${item.fileName}`,
+      thumbnailPath: item.thumbnailUrl ? `/instagram/${reelId}/thumbnail${fileIndex}.jpg` : undefined
     };
   });
 }
@@ -375,14 +375,13 @@ export async function downloadInstagramMediaMethod2(
     
     // Create post info object
     const postInfo: InstagramPostInfo = {
-      postId: postIdMatch?.[1] || 'unknown',
+      reelId: postIdMatch?.[1] || 'unknown',
       username,
       caption,
-      isCarousel: false,
       mediaItems: []
     };
     
-    // Add video or image
+    // Add video
     if (videoUrl) {
       postInfo.mediaItems.push({
         type: 'video',
@@ -391,8 +390,9 @@ export async function downloadInstagramMediaMethod2(
       });
     } else if (thumbnailUrl) {
       postInfo.mediaItems.push({
-        type: 'image',
-        url: thumbnailUrl
+        type: 'video',
+        url: thumbnailUrl,
+        thumbnailUrl: thumbnailUrl
       });
     }
     
@@ -604,14 +604,13 @@ export async function downloadInstagramMediaMethod3(
     
     // Create post info object
     const postInfo: InstagramPostInfo = {
-      postId: postIdMatch?.[1] || 'unknown',
+      reelId: postIdMatch?.[1] || 'unknown',
       username: username || 'unknown_user',
       caption: caption || '',
-      isCarousel: false,
       mediaItems: []
     };
     
-    // Add video or image
+    // Add video
     if (videoUrl) {
       postInfo.mediaItems.push({
         type: 'video',
@@ -620,8 +619,9 @@ export async function downloadInstagramMediaMethod3(
       });
     } else if (thumbnailUrl) {
       postInfo.mediaItems.push({
-        type: 'image',
-        url: thumbnailUrl
+        type: 'video',
+        url: thumbnailUrl,
+        thumbnailUrl: thumbnailUrl
       });
     }
     
@@ -881,16 +881,15 @@ export async function downloadInstagramMediaMethod4(
       throw new Error('Could not find any media URLs in Instagram content after multiple attempts');
     }
     
-    // Extract the post ID from the URL
+    // Extract the reel ID from the URL
     const postIdMatch = url.match(/\/reel\/([^\/\?]+)/i);
-    const postId = postIdMatch?.[1] || 'unknown';
+    const reelId = postIdMatch?.[1] || 'unknown';
     
     // Create post info object
     const postInfo: InstagramPostInfo = {
-      postId,
+      reelId,
       username,
       caption,
-      isCarousel: false,
       mediaItems: []
     };
     
@@ -920,8 +919,9 @@ export async function downloadInstagramMediaMethod4(
       }
       
       postInfo.mediaItems.push({
-        type: 'image',
-        url: thumbnailUrl
+        type: 'video',
+        url: thumbnailUrl,
+        thumbnailUrl: thumbnailUrl
       });
     }
     

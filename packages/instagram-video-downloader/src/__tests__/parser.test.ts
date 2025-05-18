@@ -1,29 +1,75 @@
 // Basic tests for the Instagram parser functions
-import { getContentType, extractPostId, extractUsername } from "../parser.js";
+import assert from 'node:assert';
+import { describe, it } from 'node:test';
+import { getContentType, extractPostId, extractReelId, extractUsername } from "../parser.js";
 
 describe("Instagram Parser functions", () => {
-  test("getContentType should correctly identify reel URLs", () => {
-    expect(getContentType("https://www.instagram.com/reel/CodExampleID/")).toBe(
+  it("getContentType should correctly identify reel URLs", () => {
+    assert.strictEqual(
+      getContentType("https://www.instagram.com/reel/CodExampleID/"),
       "reel"
     );
-    expect(getContentType("https://instagram.com/reel/CodExampleID/")).toBe(
+    assert.strictEqual(
+      getContentType("https://instagram.com/reel/CodExampleID/"),
       "reel"
     );
   });
 
-  test("getContentType should return unknown for non-Instagram URLs", () => {
-    expect(getContentType("https://example.com")).toBe("unknown");
+  it("getContentType should return unknown for non-Instagram URLs", () => {
+    assert.strictEqual(getContentType("https://example.com"), "unknown");
   });
 
-  test("extractPostId should extract correct IDs from different URL formats", () => {
-    expect(extractPostId("https://instagram.com/reel/CodExampleID/")).toBe(
+  it("extractPostId should extract correct IDs from reel URLs", () => {
+    // Test with a reel URL
+    assert.strictEqual(
+      extractPostId("https://instagram.com/reel/CodExampleID/"),
+      "CodExampleID"
+    );
+    
+    // Test with URL parameters
+    assert.strictEqual(
+      extractPostId("https://www.instagram.com/reel/CodExampleID/?utm_source=ig_web_copy_link"),
+      "CodExampleID"
+    );
+    
+    // Test with /reels/ format
+    assert.strictEqual(
+      extractPostId("https://www.instagram.com/reels/CodExampleID/"),
       "CodExampleID"
     );
   });
 
-  test("extractUsername should return unknown_user for non-story URLs without HTML", () => {
-    expect(extractUsername("https://www.instagram.com/p/CodExampleID/")).toBe(
+  it("extractUsername should return unknown_user for non-reel URLs", () => {
+    assert.strictEqual(
+      extractUsername("https://www.instagram.com/p/CodExampleID/"),
       "unknown_user"
+    );
+  });
+  
+  it("extractUsername should return unknown_user for reel URLs without HTML", () => {
+    assert.strictEqual(
+      extractUsername("https://www.instagram.com/reel/CodExampleID/"),
+      "unknown_user"
+    );
+  });
+
+  it("extractReelId should extract the same IDs as extractPostId", () => {
+    // Test with a reel URL
+    assert.strictEqual(
+      extractReelId("https://instagram.com/reel/CodExampleID/"),
+      "CodExampleID"
+    );
+    
+    // Test with URL parameters
+    assert.strictEqual(
+      extractReelId("https://www.instagram.com/reel/CodExampleID/?utm_source=ig_web_copy_link"),
+      "CodExampleID"
+    );
+    
+    // Test with /reels/ format
+    assert.strictEqual(
+      extractReelId("https://www.instagram.com/reels/CodExampleID/"),
+      "CodExampleID"
     );
   });
 });

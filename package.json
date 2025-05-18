@@ -7,7 +7,8 @@
     "build": "pnpm run build:packages && next build",
     "start": "next start",
     "lint": "next lint",
-    "build:packages": "pnpm --filter tiktok-video-downloader build && pnpm --filter instagram-video-downloader build"
+    "build:packages": "pnpm --filter tiktok-video-downloader build && pnpm --filter instagram-video-downloader build",
+    "test": "tsx --test **/__tests__/*.test.ts"
   },
   "dependencies": {
     "react": "^19.1.0",

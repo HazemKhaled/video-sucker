@@ -7,7 +7,7 @@ const REEL_PATTERN = /instagram\.com\/(?:reel|reels)\/([^\/\?#]+)/i;
 
 /**
  * Determines the type of Instagram content from a URL
- * Since we only support reels, this will always return 'reel' for valid URLs
+ * Will return 'reel' for valid URLs or 'unknown' for non-reel URLs
  */
 export function getContentType(url: string): InstagramContentType {
   if (REEL_PATTERN.test(url)) return 'reel';
@@ -15,20 +15,24 @@ export function getContentType(url: string): InstagramContentType {
 }
 
 /**
- * Extracts the post ID from an Instagram URL
+ * Extracts the reel ID from an Instagram reel URL
  */
-export function extractPostId(url: string): string {
+export function extractReelId(url: string): string {
+  // Match as a reel
   const reelMatch = url.match(REEL_PATTERN);
-  
   if (reelMatch && reelMatch[1]) return reelMatch[1];
   
-  throw new Error('Could not extract post ID from Instagram URL');
+  throw new Error('Could not extract reel ID from Instagram URL');
 }
 
 /**
- * Extracts the username from an Instagram URL or content
+ * Extracts the username from an Instagram reel HTML content
  */
 export function extractUsername(url: string, html?: string): string {
+  // We only want to extract usernames from reel URLs
+  if (!REEL_PATTERN.test(url)) {
+    return "unknown_user";
+  }
   
   // If HTML is provided, try to extract from it
   if (html) {
@@ -69,13 +73,12 @@ export function parseHtml(html: string, url: string): ParsingResult {
   let caption = '';
   let likesCount: number | undefined;
   let commentsCount: number | undefined;
-  let isCarousel = false;
   
   try {
     // Try to extract caption
     caption = $('meta[property="og:description"]').attr('content') || '';
     
-    // Extract video URLs
+    // Extract video URLs - reels are always videos
     const videoUrl = $('meta[property="og:video"]').attr('content');
     const videoThumbnail = $('meta[property="og:image"]').attr('content');
     
@@ -85,19 +88,9 @@ export function parseHtml(html: string, url: string): ParsingResult {
         url: videoUrl,
         thumbnailUrl: videoThumbnail
       });
-    } else {
-      // If no video, look for images
-      const imageUrl = $('meta[property="og:image"]').attr('content');
-      if (imageUrl) {
-        mediaItems.push({
-          type: 'image',
-          url: imageUrl
-        });
-      }
     }
     
-    // Check for additional media (carousel)
-    // This requires additional parsing of Instagram's embedded JSON data
+    // Check for additional metadata in embedded JSON data
     const scriptTags = $('script:not([src])').toArray().filter(elem => {
       return $(elem).html()?.includes('window._sharedData =') || false;
     });
@@ -119,31 +112,6 @@ export function parseHtml(html: string, url: string): ParsingResult {
             if (mediaData.edge_media_to_comment?.count) {
               commentsCount = mediaData.edge_media_to_comment.count;
             }
-            
-            if (mediaData.edge_sidecar_to_children?.edges) {
-              isCarousel = true;
-              mediaData.edge_sidecar_to_children.edges.forEach((edge: { 
-                node: { 
-                  is_video?: boolean; 
-                  video_url?: string;
-                  display_url?: string;
-                } 
-              }) => {
-                const node = edge.node;
-                if (node.is_video && node.video_url) {
-                  mediaItems.push({
-                    type: 'video',
-                    url: node.video_url,
-                    thumbnailUrl: node.display_url
-                  });
-                } else if (node.display_url) {
-                  mediaItems.push({
-                    type: 'image',
-                    url: node.display_url
-                  });
-                }
-              });
-            }
           }
         } catch (e) {
           console.error('Error parsing Instagram JSON data:', e);
@@ -154,27 +122,15 @@ export function parseHtml(html: string, url: string): ParsingResult {
     console.error('Error parsing Instagram HTML:', e);
   }
   
-  // Fallback: If no media items found, add the og:image as a fallback
-  if (mediaItems.length === 0) {
-    const ogImage = $('meta[property="og:image"]').attr('content');
-    if (ogImage) {
-      mediaItems.push({
-        type: 'image',
-        url: ogImage
-      });
-    }
-  }
-  
-  const postId = extractPostId(url);
+  const reelId = extractReelId(url);
   const username = extractUsername(url, html);
   
   const postInfo: InstagramPostInfo = {
-    postId,
+    reelId,
     username,
     caption,
     likesCount,
     commentsCount,
-    isCarousel,
     mediaItems
   };
   
@@ -233,16 +189,15 @@ async function parseWithAlternateMethod(url: string): Promise<ParsingResult> {
     
     if (response.status === 200 && response.data) {
       const contentType = getContentType(url);
-      const postId = extractPostId(url);
+      const reelId = extractReelId(url);
       
       const postInfo: InstagramPostInfo = {
-        postId,
+        reelId,
         username: response.data.author_name || 'unknown_user',
         caption: response.data.title || '',
-        isCarousel: false,
         mediaItems: [
           {
-            type: contentType === 'reel' ? 'video' : 'image',
+            type: 'video',
             url: response.data.thumbnail_url || '',
             thumbnailUrl: response.data.thumbnail_url
           }
@@ -260,15 +215,17 @@ async function parseWithAlternateMethod(url: string): Promise<ParsingResult> {
   
   // If all methods fail, return a minimal result
   const contentType = getContentType(url);
-  const postId = extractPostId(url);
+  const reelId = extractReelId(url);
   
   return {
     contentType,
     postInfo: {
-      postId,
+      reelId,
       username: 'unknown_user',
-      isCarousel: false,
       mediaItems: []
     }
   };
 }
+
+// Keep backward compatibility with the old extractPostId function name
+export const extractPostId = extractReelId;

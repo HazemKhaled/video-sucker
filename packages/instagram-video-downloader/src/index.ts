@@ -6,7 +6,7 @@ export {
   downloadInstagramMediaMethod3,
   downloadInstagramMediaMethod4
 } from './downloader.js';
-export { parseInstagramUrl, getContentType, extractPostId } from './parser.js';
+export { parseInstagramUrl, getContentType, extractReelId, extractPostId } from './parser.js';
 export { normalizeInstagramUrl, isValidInstagramUrl, getContentIdFromPath } from './url-utils.js';
 
 // Export types

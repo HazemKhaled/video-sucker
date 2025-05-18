@@ -36,15 +36,14 @@ export async function POST(request: NextRequest) {
         );
       }
       
-      console.log(`Successfully downloaded media for post ${result.postId} by ${result.username}`);
-      console.log(`Media items: ${result.mediaItems.length}, Is carousel: ${result.isCarousel}`);
+      console.log(`Successfully downloaded media for reel ${result.reelId} by ${result.username}`);
+      console.log(`Media items: ${result.mediaItems.length}`);
       
       // Process the response to make it suitable for frontend
       const responseData = {
-        postId: result.postId,
+        reelId: result.reelId,
         username: result.username,
         caption: result.caption,
-        isCarousel: result.isCarousel,
         likesCount: result.likesCount,
         commentsCount: result.commentsCount,
         timestamp: result.timestamp,

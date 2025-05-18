@@ -3,7 +3,7 @@
  */
 
 /**
- * Normalizes an Instagram URL to ensure consistent handling
+ * Normalizes an Instagram reel URL to ensure consistent handling
  * This removes tracking parameters, fragments, etc.
  */
 export function normalizeInstagramUrl(url: string): string {
@@ -16,8 +16,24 @@ export function normalizeInstagramUrl(url: string): string {
       throw new Error('Not an Instagram URL');
     }
     
+    // Check if it's a reel URL pattern
+    const isReelUrl = /\/(?:reel|reels)\//.test(parsedUrl.pathname);
+    if (!isReelUrl) {
+      throw new Error('Not an Instagram reel URL');
+    }
+    
     // Remove all query parameters except essential ones
     const cleanUrl = new URL(parsedUrl.origin + parsedUrl.pathname);
+    
+    // Ensure we have a trailing slash for consistency
+    if (!cleanUrl.pathname.endsWith('/')) {
+      cleanUrl.pathname += '/';
+    }
+    
+    // Ensure hostname is www.instagram.com for consistency
+    if (cleanUrl.hostname === 'instagram.com') {
+      cleanUrl.hostname = 'www.instagram.com';
+    }
     
     return cleanUrl.toString();
   } catch (error) {
@@ -28,8 +44,7 @@ export function normalizeInstagramUrl(url: string): string {
 }
 
 /**
- * Validates if a URL is a valid Instagram URL that we can process
- * We only support reels as per requirements
+ * Validates if a URL is a valid Instagram reel URL that we can process
  */
 export function isValidInstagramUrl(url: string): boolean {
   // Basic validation for Instagram domain
@@ -51,12 +66,9 @@ export function getContentIdFromPath(urlPath: string): string | null {
   // Remove leading/trailing slashes and split path
   const segments = urlPath.replace(/^\/|\/$/g, '').split('/');
   
-  // For posts and reels, the ID is typically after 'p' or 'reel'
-  if (segments.includes('p') || segments.includes('reel') || segments.includes('reels')) {
-    const idIndex = segments.findIndex(s => s === 'p' || s === 'reel' || s === 'reels') + 1;
-    if (idIndex < segments.length) {
-      return segments[idIndex];
-    }
+  // Check for reel format
+  if (segments.length >= 2 && (segments[0] === 'reel' || segments[0] === 'reels')) {
+    return segments[1];
   }
   
   return null;

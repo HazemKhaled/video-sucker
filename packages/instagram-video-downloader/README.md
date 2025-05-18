@@ -56,6 +56,22 @@ async function downloadContent() {
 downloadContent();
 ```
 
+## Development
+
+### Running Tests
+
+This package uses Node.js native test runner and the assert module for testing. To run tests:
+
+```bash
+# Install dependencies
+pnpm install
+
+# Run all tests
+pnpm test
+```
+
+The tests are located in the `src/__tests__` directory and use the Node.js built-in test runner with the assert module.
+
 ## Instagram Reels Support
 
 Instagram frequently updates their platform to make it more difficult to extract video content. This package includes advanced techniques to handle these changes, particularly for Instagram Reels which use different embedding methods than regular posts.

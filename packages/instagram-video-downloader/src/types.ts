@@ -8,18 +8,17 @@ export interface DownloadOptions {
 }
 
 export interface MediaItem {
-  type: 'image' | 'video';
+  type: 'video';  // Instagram reels are only videos
   url: string;
   thumbnailUrl?: string;
   fileName?: string;
 }
 
 export interface InstagramPostInfo {
-  postId: string;
+  reelId: string;     // Renamed from postId to reelId
   username: string;
   caption?: string;
   timestamp?: string;
-  isCarousel: boolean;
   likesCount?: number;
   commentsCount?: number;
   mediaItems: MediaItem[];
