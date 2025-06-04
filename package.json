@@ -3,10 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "pnpm run build:packages && next dev --turbopack",
     "build": "pnpm run build:packages && next build",
     "start": "next start",
     "lint": "next lint",
+    "lint:fix": "next lint --fix",
     "build:packages": "pnpm --filter tiktok-video-downloader build && pnpm --filter instagram-video-downloader build",
     "test": "tsx --test **/__tests__/*.test.ts"
   },
