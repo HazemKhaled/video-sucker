@@ -50,7 +50,6 @@ export async function POST(request: NextRequest) {
         caption: result.caption,
         likesCount: result.likesCount,
         commentsCount: result.commentsCount,
-        timestamp: result.timestamp,
         mediaItems: result.mediaItems.map((item) => ({
           type: item.type,
           url: item.url,

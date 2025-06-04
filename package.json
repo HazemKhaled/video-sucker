@@ -11,7 +11,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "build:packages": "pnpm --filter tiktok-video-downloader build && pnpm --filter instagram-video-downloader build",
-    "test": "tsx --test **/__tests__/*.test.ts"
+    "test": "tsx --test **/__tests__/*.test.ts",
+    "typecheck": "tsc --noEmit && pnpm --filter tiktok-video-downloader run typecheck && pnpm --filter instagram-video-downloader run typecheck"
   },
   "dependencies": {
     "instagram-video-downloader": "workspace:*",
