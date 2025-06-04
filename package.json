@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
-    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "build:packages": "pnpm --filter tiktok-video-downloader build && pnpm --filter instagram-video-downloader build",
     "test": "tsx --test **/__tests__/*.test.ts"
   },

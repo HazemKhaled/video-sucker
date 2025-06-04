@@ -14,8 +14,8 @@ const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
     rules: {
-      "react/no-unescaped-entities": "off"
-    }
+      "react/no-unescaped-entities": "off",
+    },
   },
 
   // Configuration for packages
@@ -29,12 +29,16 @@ const eslintConfig = [
       },
     },
     plugins: {
-      "@typescript-eslint": (await import("@typescript-eslint/eslint-plugin")).default,
+      "@typescript-eslint": (await import("@typescript-eslint/eslint-plugin"))
+        .default,
       prettier: (await import("eslint-plugin-prettier")).default,
     },
     rules: {
       "prettier/prettier": "error",
-      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_" },
+      ],
       "@typescript-eslint/no-explicit-any": "warn",
       "no-console": "off",
       "prefer-const": "error",
