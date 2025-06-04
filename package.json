@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "build:packages": "pnpm --filter tiktok-video-downloader build && pnpm --filter instagram-video-downloader build",
     "test": "tsx --test **/__tests__/*.test.ts"
   },
@@ -19,12 +20,17 @@
     "instagram-video-downloader": "workspace:*"
   },
   "devDependencies": {
-    "typescript": "^5",
-    "@types/node": "^20",
+    "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "15.3.2",
-    "@eslint/eslintrc": "^3"
+    "@typescript-eslint/eslint-plugin": "^7",
+    "@typescript-eslint/parser": "^7",
+    "@eslint/eslintrc": "^3",
+    "eslint": "^8",
+    "eslint-config-next": "^15",
+    "eslint-config-prettier": "^9",
+    "eslint-plugin-prettier": "^5",
+    "prettier": "^3",
+    "typescript": "^5"
   }
 }
