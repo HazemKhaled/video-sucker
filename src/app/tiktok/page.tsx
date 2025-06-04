@@ -139,7 +139,7 @@ export default function TikTokPage() {
             download it.
           </p>
           <p className={styles.exampleContainer}>
-            Try this example:{" "}
+            Try these examples:{" "}
             <button
               className={`${styles.exampleLink} ${exampleClicked ? styles.exampleLinkClicked : ""}`}
               onClick={(e) => {
@@ -147,7 +147,7 @@ export default function TikTokPage() {
                 if (isLoading) return; // Prevent clicks while already loading
                 setExampleClicked(true);
                 setUrl(
-                  "https://www.tiktok.com/@khaby.lame/video/7503538849923026194",
+                  "https://www.tiktok.com/@azo_aljaer/video/7290073611744955653",
                 );
                 // Submit the form programmatically after setting the URL
                 setTimeout(() => {
@@ -164,6 +164,36 @@ export default function TikTokPage() {
                 {exampleClicked
                   ? "Loading example..."
                   : "@khaby.lame's viral TikTok"}
+              </span>
+              {exampleClicked ? (
+                <span className={styles.exampleLinkSpinner}></span>
+              ) : (
+                <span className={styles.exampleLinkIcon}>→</span>
+              )}
+            </button>
+            {" or "}
+            <button
+              className={`${styles.exampleLink} ${exampleClicked ? styles.exampleLinkClicked : ""}`}
+              onClick={(e) => {
+                e.preventDefault();
+                if (isLoading) return; // Prevent clicks while already loading
+                setExampleClicked(true);
+                setUrl(
+                  "https://www.tiktok.com/@zifev44/video/7511539066303794454",
+                );
+                // Submit the form programmatically after setting the URL
+                setTimeout(() => {
+                  const form = document.querySelector("form");
+                  if (form)
+                    form.dispatchEvent(
+                      new Event("submit", { cancelable: true, bubbles: true }),
+                    );
+                }, 100);
+              }}
+              disabled={isLoading || exampleClicked}
+            >
+              <span>
+                {exampleClicked ? "Loading example..." : "@zifev44's TikTok"}
               </span>
               {exampleClicked ? (
                 <span className={styles.exampleLinkSpinner}></span>
