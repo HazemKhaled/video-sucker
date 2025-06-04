@@ -70,32 +70,35 @@ export async function downloadFile(url: string, outputPath: string, userAgent?: 
  */
 export async function downloadMediaItems(postInfo: InstagramPostInfo, outputDir: string): Promise<string[]> {
   const savedFiles: string[] = [];
-  
+
+  // Create Instagram-specific directory structure: outputDir/instagram/reelId/
+  const instagramDir = path.join(outputDir, 'instagram', postInfo.reelId);
+
   for (let i = 0; i < postInfo.mediaItems.length; i++) {
     const mediaItem = postInfo.mediaItems[i];
-    
+
     if (mediaItem.url) {
       try {
-        // Generate filename
+        // Generate filename - use simple names like TikTok
         const extension = mediaItem.type === 'video' ? 'mp4' : 'jpg';
-        const filename = postInfo.mediaItems.length > 1 
-          ? `${postInfo.reelId}_${i + 1}.${extension}`
-          : `${postInfo.reelId}.${extension}`;
-        
-        const outputPath = path.join(outputDir, filename);
-        
+        const filename = postInfo.mediaItems.length > 1
+          ? `${mediaItem.type}_${i + 1}.${extension}`
+          : `${mediaItem.type}.${extension}`;
+
+        const outputPath = path.join(instagramDir, filename);
+
         // Download the file
         await downloadFile(mediaItem.url, outputPath);
         savedFiles.push(outputPath);
-        
+
         // Also download thumbnail if it exists and is different from main media
         if (mediaItem.thumbnailUrl && mediaItem.thumbnailUrl !== mediaItem.url) {
-          const thumbnailFilename = postInfo.mediaItems.length > 1 
-            ? `${postInfo.reelId}_${i + 1}_thumbnail.jpg`
-            : `${postInfo.reelId}_thumbnail.jpg`;
-          
-          const thumbnailPath = path.join(outputDir, thumbnailFilename);
-          
+          const thumbnailFilename = postInfo.mediaItems.length > 1
+            ? `thumbnail_${i + 1}.jpg`
+            : `thumbnail.jpg`;
+
+          const thumbnailPath = path.join(instagramDir, thumbnailFilename);
+
           try {
             await downloadFile(mediaItem.thumbnailUrl, thumbnailPath);
             savedFiles.push(thumbnailPath);
@@ -109,13 +112,19 @@ export async function downloadMediaItems(postInfo: InstagramPostInfo, outputDir:
       }
     }
   }
-  
-  // Update the post info with saved files
-  postInfo.savedFiles = savedFiles.map((filePath) => ({
-    mediaPath: filePath,
-    thumbnailPath: undefined
-  }));
-  
+
+  // Update the post info with saved files - convert to public URLs
+  postInfo.savedFiles = savedFiles.map((filePath) => {
+    // Convert absolute path to public URL
+    const relativePath = path.relative(outputDir, filePath);
+    const publicUrl = '/' + relativePath.replace(/\\/g, '/'); // Ensure forward slashes for URLs
+
+    return {
+      mediaPath: publicUrl,
+      thumbnailPath: undefined
+    };
+  });
+
   return savedFiles;
 }
 
