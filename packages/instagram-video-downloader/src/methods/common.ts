@@ -1,16 +1,16 @@
-import axios from 'axios';
-import * as fs from 'fs';
-import * as path from 'path';
-import { InstagramPostInfo } from '../types.js';
+import axios from "axios";
+import * as fs from "fs";
+import * as path from "path";
+import { InstagramPostInfo } from "../types.js";
 
 // Rotate through different user agents to avoid blocking
 const USER_AGENTS = [
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15',
-  'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-  'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
-  'Mozilla/5.0 (iPad; CPU OS 17_5_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
-  'Mozilla/5.0 (Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Mobile Safari/537.36'
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15",
+  "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+  "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1",
+  "Mozilla/5.0 (iPad; CPU OS 17_5_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1",
+  "Mozilla/5.0 (Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Mobile Safari/537.36",
 ];
 
 /**
@@ -23,31 +23,35 @@ export function getRandomUserAgent(): string {
 /**
  * Downloads a file from a URL and saves it to disk
  */
-export async function downloadFile(url: string, outputPath: string, userAgent?: string): Promise<void> {
+export async function downloadFile(
+  url: string,
+  outputPath: string,
+  userAgent?: string,
+): Promise<void> {
   try {
     const selectedUserAgent = userAgent || getRandomUserAgent();
-    
+
     const response = await axios({
-      method: 'GET',
+      method: "GET",
       url: url,
-      responseType: 'arraybuffer',
+      responseType: "arraybuffer",
       headers: {
-        'User-Agent': selectedUserAgent,
-        'Referer': 'https://www.instagram.com/',
-        'Accept': '*/*',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'DNT': '1',
-        'Connection': 'keep-alive',
-        'Sec-Fetch-Dest': 'video',
-        'Sec-Fetch-Mode': 'cors',
-        'Sec-Fetch-Site': 'cross-site',
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache',
-        'Origin': 'https://www.instagram.com'
+        "User-Agent": selectedUserAgent,
+        Referer: "https://www.instagram.com/",
+        Accept: "*/*",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept-Encoding": "gzip, deflate, br",
+        DNT: "1",
+        Connection: "keep-alive",
+        "Sec-Fetch-Dest": "video",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Site": "cross-site",
+        "Cache-Control": "no-cache",
+        Pragma: "no-cache",
+        Origin: "https://www.instagram.com",
       },
       maxRedirects: 5,
-      timeout: 60000 // Increased to 60 seconds timeout
+      timeout: 60000, // Increased to 60 seconds timeout
     });
 
     // Create directory if it doesn't exist
@@ -68,11 +72,14 @@ export async function downloadFile(url: string, outputPath: string, userAgent?: 
 /**
  * Downloads all media items from a post
  */
-export async function downloadMediaItems(postInfo: InstagramPostInfo, outputDir: string): Promise<string[]> {
+export async function downloadMediaItems(
+  postInfo: InstagramPostInfo,
+  outputDir: string,
+): Promise<string[]> {
   const savedFiles: string[] = [];
 
   // Create Instagram-specific directory structure: outputDir/instagram/reelId/
-  const instagramDir = path.join(outputDir, 'instagram', postInfo.reelId);
+  const instagramDir = path.join(outputDir, "instagram", postInfo.reelId);
 
   for (let i = 0; i < postInfo.mediaItems.length; i++) {
     const mediaItem = postInfo.mediaItems[i];
@@ -80,10 +87,11 @@ export async function downloadMediaItems(postInfo: InstagramPostInfo, outputDir:
     if (mediaItem.url) {
       try {
         // Generate filename - use simple names like TikTok
-        const extension = mediaItem.type === 'video' ? 'mp4' : 'jpg';
-        const filename = postInfo.mediaItems.length > 1
-          ? `${mediaItem.type}_${i + 1}.${extension}`
-          : `${mediaItem.type}.${extension}`;
+        const extension = mediaItem.type === "video" ? "mp4" : "jpg";
+        const filename =
+          postInfo.mediaItems.length > 1
+            ? `${mediaItem.type}_${i + 1}.${extension}`
+            : `${mediaItem.type}.${extension}`;
 
         const outputPath = path.join(instagramDir, filename);
 
@@ -92,10 +100,14 @@ export async function downloadMediaItems(postInfo: InstagramPostInfo, outputDir:
         savedFiles.push(outputPath);
 
         // Also download thumbnail if it exists and is different from main media
-        if (mediaItem.thumbnailUrl && mediaItem.thumbnailUrl !== mediaItem.url) {
-          const thumbnailFilename = postInfo.mediaItems.length > 1
-            ? `thumbnail_${i + 1}.jpg`
-            : `thumbnail.jpg`;
+        if (
+          mediaItem.thumbnailUrl &&
+          mediaItem.thumbnailUrl !== mediaItem.url
+        ) {
+          const thumbnailFilename =
+            postInfo.mediaItems.length > 1
+              ? `thumbnail_${i + 1}.jpg`
+              : `thumbnail.jpg`;
 
           const thumbnailPath = path.join(instagramDir, thumbnailFilename);
 
@@ -103,7 +115,9 @@ export async function downloadMediaItems(postInfo: InstagramPostInfo, outputDir:
             await downloadFile(mediaItem.thumbnailUrl, thumbnailPath);
             savedFiles.push(thumbnailPath);
           } catch (thumbnailError) {
-            console.warn(`Failed to download thumbnail: ${thumbnailError instanceof Error ? thumbnailError.message : 'Unknown error'}`);
+            console.warn(
+              `Failed to download thumbnail: ${thumbnailError instanceof Error ? thumbnailError.message : "Unknown error"}`,
+            );
           }
         }
       } catch (error) {
@@ -117,11 +131,11 @@ export async function downloadMediaItems(postInfo: InstagramPostInfo, outputDir:
   postInfo.savedFiles = savedFiles.map((filePath) => {
     // Convert absolute path to public URL
     const relativePath = path.relative(outputDir, filePath);
-    const publicUrl = '/' + relativePath.replace(/\\/g, '/'); // Ensure forward slashes for URLs
+    const publicUrl = "/" + relativePath.replace(/\\/g, "/"); // Ensure forward slashes for URLs
 
     return {
       mediaPath: publicUrl,
-      thumbnailPath: undefined
+      thumbnailPath: undefined,
     };
   });
 
@@ -134,36 +148,38 @@ export async function downloadMediaItems(postInfo: InstagramPostInfo, outputDir:
 export function extractShortcode(url: string): string {
   const reelMatch = url.match(/\/reel\/([^\/\?]+)/);
   const postMatch = url.match(/\/p\/([^\/\?]+)/);
-  
+
   const shortcode = reelMatch?.[1] || postMatch?.[1];
   if (!shortcode) {
-    throw new Error('Could not extract shortcode from URL');
+    throw new Error("Could not extract shortcode from URL");
   }
-  
+
   return shortcode;
 }
-
-
 
 /**
  * Get mobile headers for Instagram requests
  */
 export function getMobileHeaders(userAgent?: string) {
   return {
-    'User-Agent': userAgent || 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
-    'Accept-Language': 'en-US,en;q=0.9',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-    'Referer': 'https://www.google.com/',
-    'sec-ch-ua': '"Not/A)Brand";v="99", "Google Chrome";v="125", "Chromium";v="125"',
-    'sec-ch-ua-mobile': '?1',
-    'sec-ch-ua-platform': '"iOS"',
-    'Sec-Fetch-Site': 'none',
-    'Sec-Fetch-Mode': 'navigate',
-    'Sec-Fetch-User': '?1',
-    'Sec-Fetch-Dest': 'document',
-    'Upgrade-Insecure-Requests': '1',
-    'Cache-Control': 'no-cache',
-    'Pragma': 'no-cache'
+    "User-Agent":
+      userAgent ||
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1",
+    "Accept-Language": "en-US,en;q=0.9",
+    Accept:
+      "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+    Referer: "https://www.google.com/",
+    "sec-ch-ua":
+      '"Not/A)Brand";v="99", "Google Chrome";v="125", "Chromium";v="125"',
+    "sec-ch-ua-mobile": "?1",
+    "sec-ch-ua-platform": '"iOS"',
+    "Sec-Fetch-Site": "none",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-User": "?1",
+    "Sec-Fetch-Dest": "document",
+    "Upgrade-Insecure-Requests": "1",
+    "Cache-Control": "no-cache",
+    Pragma: "no-cache",
   };
 }
 
@@ -172,19 +188,22 @@ export function getMobileHeaders(userAgent?: string) {
  */
 export function getDesktopHeaders() {
   return {
-    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-    'Accept-Language': 'en-US,en;q=0.9',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-    'sec-ch-ua': '"Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="8"',
-    'sec-ch-ua-mobile': '?0',
-    'sec-ch-ua-platform': '"macOS"',
-    'Sec-Fetch-Site': 'none',
-    'Sec-Fetch-Mode': 'navigate',
-    'Sec-Fetch-User': '?1',
-    'Sec-Fetch-Dest': 'document',
-    'Upgrade-Insecure-Requests': '1',
-    'Cache-Control': 'no-cache',
-    'Pragma': 'no-cache'
+    "User-Agent":
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+    "Accept-Language": "en-US,en;q=0.9",
+    Accept:
+      "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+    "sec-ch-ua":
+      '"Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="8"',
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": '"macOS"',
+    "Sec-Fetch-Site": "none",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-User": "?1",
+    "Sec-Fetch-Dest": "document",
+    "Upgrade-Insecure-Requests": "1",
+    "Cache-Control": "no-cache",
+    Pragma: "no-cache",
   };
 }
 
@@ -193,19 +212,21 @@ export function getDesktopHeaders() {
  */
 export function getFirefoxHeaders() {
   return {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:125.0) Gecko/20100101 Firefox/125.0',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-    'Accept-Language': 'en-US,en;q=0.5',
-    'Accept-Encoding': 'gzip, deflate, br',
-    'DNT': '1',
-    'Connection': 'keep-alive',
-    'Upgrade-Insecure-Requests': '1',
-    'Sec-Fetch-Dest': 'document',
-    'Sec-Fetch-Mode': 'navigate',
-    'Sec-Fetch-Site': 'none',
-    'Sec-Fetch-User': '?1',
-    'Cache-Control': 'no-cache',
-    'Pragma': 'no-cache'
+    "User-Agent":
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:125.0) Gecko/20100101 Firefox/125.0",
+    Accept:
+      "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.5",
+    "Accept-Encoding": "gzip, deflate, br",
+    DNT: "1",
+    Connection: "keep-alive",
+    "Upgrade-Insecure-Requests": "1",
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "none",
+    "Sec-Fetch-User": "?1",
+    "Cache-Control": "no-cache",
+    Pragma: "no-cache",
   };
 }
 
@@ -222,23 +243,26 @@ export const VIDEO_PATTERNS = [
   /video_url":\s*"([^"]+)"/g,
   /playback_url":\s*"([^"]+)"/g,
   // Direct URL patterns
-  /(https:\/\/[^"'\s]+\.mp4[^"'\s]*)/g
+  /(https:\/\/[^"'\s]+\.mp4[^"'\s]*)/g,
 ];
 
 /**
  * Clean and validate video URL
  */
 export function cleanVideoUrl(url: string): string {
-  return url.replace(/\\u0026/g, '&').replace(/\\\//g, '/');
+  return url.replace(/\\u0026/g, "&").replace(/\\\//g, "/");
 }
 
 /**
  * Filter valid video URLs
  */
 export function filterValidVideoUrls(urls: string[]): string[] {
-  return urls.filter(url =>
-    url.includes('.mp4') &&
-    (url.includes('scontent') || url.includes('cdninstagram') || url.includes('fbcdn'))
+  return urls.filter(
+    (url) =>
+      url.includes(".mp4") &&
+      (url.includes("scontent") ||
+        url.includes("cdninstagram") ||
+        url.includes("fbcdn")),
   );
 }
 
@@ -246,7 +270,7 @@ export function filterValidVideoUrls(urls: string[]): string[] {
  * Get default output directory
  */
 export function getDefaultOutputDir(): string {
-  return path.join(process.cwd(), 'public');
+  return path.join(process.cwd(), "public");
 }
 
 /**
@@ -256,17 +280,18 @@ export function normalizeVideoUrl(url: string): string {
   let normalizedUrl = url;
 
   // Fix protocol
-  if (normalizedUrl.startsWith('//')) {
+  if (normalizedUrl.startsWith("//")) {
     normalizedUrl = `https:${normalizedUrl}`;
-  } else if (normalizedUrl.startsWith('/')) {
+  } else if (normalizedUrl.startsWith("/")) {
     normalizedUrl = `https://www.instagram.com${normalizedUrl}`;
   }
 
   // Clean up encoded characters
-  normalizedUrl = normalizedUrl.replace(/\\u0026/g, '&')
-                               .replace(/\\u003c/g, '<')
-                               .replace(/\\u003e/g, '>')
-                               .replace(/\\\//g, '/');
+  normalizedUrl = normalizedUrl
+    .replace(/\\u0026/g, "&")
+    .replace(/\\u003c/g, "<")
+    .replace(/\\u003e/g, ">")
+    .replace(/\\\//g, "/");
 
   return normalizedUrl;
 }
@@ -274,12 +299,16 @@ export function normalizeVideoUrl(url: string): string {
 /**
  * Create a standardized PostInfo object
  */
-export function createPostInfo(shortcode: string, username: string = 'unknown_user', caption: string = ''): InstagramPostInfo {
+export function createPostInfo(
+  shortcode: string,
+  username: string = "unknown_user",
+  caption: string = "",
+): InstagramPostInfo {
   return {
     reelId: shortcode,
     username,
     caption,
-    mediaItems: []
+    mediaItems: [],
   };
 }
 
@@ -288,16 +317,18 @@ export function createPostInfo(shortcode: string, username: string = 'unknown_us
  */
 export function addMediaItem(
   postInfo: InstagramPostInfo,
-  type: 'video' | 'image',
+  type: "video" | "image",
   url: string,
-  thumbnailUrl?: string | null
+  thumbnailUrl?: string | null,
 ): void {
   const normalizedUrl = normalizeVideoUrl(url);
-  const normalizedThumbnailUrl = thumbnailUrl ? normalizeVideoUrl(thumbnailUrl) : undefined;
+  const normalizedThumbnailUrl = thumbnailUrl
+    ? normalizeVideoUrl(thumbnailUrl)
+    : undefined;
 
   postInfo.mediaItems.push({
     type,
     url: normalizedUrl,
-    thumbnailUrl: normalizedThumbnailUrl
+    thumbnailUrl: normalizedThumbnailUrl,
   });
 }

@@ -20,56 +20,62 @@ export default function TikTokPage() {
   const [error, setError] = useState("");
   const [showThumbnailPreview, setShowThumbnailPreview] = useState(false);
   const [enlargedThumbnail, setEnlargedThumbnail] = useState(false);
-  const [downloadNotification, setDownloadNotification] = useState<string | null>(null);
+  const [downloadNotification, setDownloadNotification] = useState<
+    string | null
+  >(null);
   const [exampleClicked, setExampleClicked] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Don't submit if already loading
     if (isLoading) return;
-    
+
     setIsLoading(true);
     setError("");
     setTiktokData(null);
     setShowThumbnailPreview(false);
     setEnlargedThumbnail(false);
     setDownloadNotification(null);
-    
+
     // Basic validation for TikTok URL
-    if (!url.includes('tiktok.com')) {
+    if (!url.includes("tiktok.com")) {
       setError("Please enter a valid TikTok URL");
       setIsLoading(false);
       return;
     }
-    
+
     try {
-      const response = await fetch('/api/tiktok', {
-        method: 'POST',
+      const response = await fetch("/api/tiktok", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ url }),
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to fetch TikTok data');
+        throw new Error(data.message || "Failed to fetch TikTok data");
       }
-      
+
       if (data.error) {
-        throw new Error(data.message || 'Error processing video');
+        throw new Error(data.message || "Error processing video");
       }
-      
+
       setTiktokData(data);
-      
+
       // If we have a thumbnail, we can show the preview immediately
       if (data.thumbnail) {
         setShowThumbnailPreview(true);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch TikTok data. Please check the URL and try again.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to fetch TikTok data. Please check the URL and try again.",
+      );
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -79,17 +85,19 @@ export default function TikTokPage() {
 
   const handleVideoDownload = () => {
     setShowThumbnailPreview(true);
-    setDownloadNotification("Video downloaded successfully! Thumbnail preview is now available.");
-    
+    setDownloadNotification(
+      "Video downloaded successfully! Thumbnail preview is now available.",
+    );
+
     // Hide notification after 5 seconds
     setTimeout(() => {
       setDownloadNotification(null);
     }, 5000);
   };
-  
+
   const handleThumbnailDownload = () => {
     setDownloadNotification("Thumbnail downloaded successfully!");
-    
+
     // Hide notification after 5 seconds
     setTimeout(() => {
       setDownloadNotification(null);
@@ -99,7 +107,9 @@ export default function TikTokPage() {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <Link href="/" className={styles.backLink}>Back to Home</Link>
+        <Link href="/" className={styles.backLink}>
+          Back to Home
+        </Link>
         <h1>TikTok Video Downloader</h1>
       </header>
 
@@ -114,34 +124,47 @@ export default function TikTokPage() {
             className={styles.input}
             disabled={isLoading}
           />
-          <button 
-            type="submit" 
-            className={styles.submitButton} 
+          <button
+            type="submit"
+            className={styles.submitButton}
             disabled={isLoading || !url.trim()}
           >
             {isLoading ? "Loading..." : "Get Video"}
           </button>
         </form>
-        
+
         <div className={styles.instructions}>
-          <p>Paste a TikTok video URL above and click "Get Video" to view and download it.</p>
+          <p>
+            Paste a TikTok video URL above and click "Get Video" to view and
+            download it.
+          </p>
           <p className={styles.exampleContainer}>
-            Try this example: <button 
-              className={`${styles.exampleLink} ${exampleClicked ? styles.exampleLinkClicked : ''}`} 
+            Try this example:{" "}
+            <button
+              className={`${styles.exampleLink} ${exampleClicked ? styles.exampleLinkClicked : ""}`}
               onClick={(e) => {
                 e.preventDefault();
                 if (isLoading) return; // Prevent clicks while already loading
                 setExampleClicked(true);
-                setUrl("https://www.tiktok.com/@khaby.lame/video/7503538849923026194");
+                setUrl(
+                  "https://www.tiktok.com/@khaby.lame/video/7503538849923026194",
+                );
                 // Submit the form programmatically after setting the URL
                 setTimeout(() => {
                   const form = document.querySelector("form");
-                  if (form) form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+                  if (form)
+                    form.dispatchEvent(
+                      new Event("submit", { cancelable: true, bubbles: true }),
+                    );
                 }, 100);
               }}
               disabled={isLoading || exampleClicked}
             >
-              <span>{exampleClicked ? 'Loading example...' : '@khaby.lame\'s viral TikTok'}</span> 
+              <span>
+                {exampleClicked
+                  ? "Loading example..."
+                  : "@khaby.lame's viral TikTok"}
+              </span>
               {exampleClicked ? (
                 <span className={styles.exampleLinkSpinner}></span>
               ) : (
@@ -152,7 +175,7 @@ export default function TikTokPage() {
         </div>
 
         {error && <div className={styles.error}>{error}</div>}
-        
+
         {isLoading && (
           <div className={styles.loaderContainer}>
             <div className={styles.loader}></div>
@@ -163,8 +186,8 @@ export default function TikTokPage() {
         {tiktokData && (
           <div className={styles.resultContainer}>
             <div className={styles.videoContainer}>
-              <video 
-                src={tiktokData.video} 
+              <video
+                src={tiktokData.video}
                 poster={tiktokData.thumbnail}
                 controls
                 autoPlay
@@ -174,8 +197,8 @@ export default function TikTokPage() {
             <div className={styles.infoContainer}>
               <h2 className={styles.username}>{tiktokData.username}</h2>
               <p className={styles.description}>{tiktokData.description}</p>
-              <a 
-                href={tiktokData.downloadUrl} 
+              <a
+                href={tiktokData.downloadUrl}
                 download="tiktok_video.mp4"
                 className={styles.downloadButton}
                 onClick={handleVideoDownload}
@@ -183,33 +206,49 @@ export default function TikTokPage() {
                 Download Video
               </a>
               <div className={styles.fileInfo}>
-                <p>Video saved at: <code>/tiktok/{tiktokData.video.split('/').slice(-2)[0]}/video.mp4</code></p>
+                <p>
+                  Video saved at:{" "}
+                  <code>
+                    /tiktok/{tiktokData.video.split("/").slice(-2)[0]}/video.mp4
+                  </code>
+                </p>
               </div>
-              
+
               {showThumbnailPreview && tiktokData.thumbnail && (
                 <div className={styles.thumbnailPreviewContainer}>
-                  <h3>Video Thumbnail</h3>                    <div 
+                  <h3>Video Thumbnail</h3>{" "}
+                  <div
                     className={styles.thumbnailWrapper}
                     onClick={() => setEnlargedThumbnail(!enlargedThumbnail)}
                   >
-                    <Image 
-                      src={tiktokData.thumbnail} 
-                      alt="Video thumbnail" 
+                    <Image
+                      src={tiktokData.thumbnail}
+                      alt="Video thumbnail"
                       className={styles.thumbnailPreview}
                       width={250}
-                      height={350} 
+                      height={350}
                       unoptimized
                     />
                     <div className={styles.thumbnailOverlay}>
-                      <span>{enlargedThumbnail ? 'Click to shrink' : 'Click to enlarge'}</span>
+                      <span>
+                        {enlargedThumbnail
+                          ? "Click to shrink"
+                          : "Click to enlarge"}
+                      </span>
                     </div>
                   </div>
                   <div className={styles.thumbnailInfo}>
-                    <p>Thumbnail saved at: <code>/tiktok/{tiktokData.thumbnail.split('/').slice(-2)[0]}/thumbnail.jpg</code></p>
+                    <p>
+                      Thumbnail saved at:{" "}
+                      <code>
+                        /tiktok/{tiktokData.thumbnail.split("/").slice(-2)[0]}
+                        /thumbnail.jpg
+                      </code>
+                    </p>
                   </div>
                   <div className={styles.thumbnailActions}>
-                    <a 
-                      href={tiktokData.thumbnail} 
+                    <a
+                      href={tiktokData.thumbnail}
                       download="tiktok_thumbnail.jpg"
                       className={styles.thumbnailDownloadButton}
                       onClick={handleThumbnailDownload}
@@ -219,19 +258,22 @@ export default function TikTokPage() {
                   </div>
                 </div>
               )}
-              
+
               {enlargedThumbnail && tiktokData.thumbnail && (
-                <div className={styles.enlargedThumbnailContainer} onClick={() => setEnlargedThumbnail(false)}>
+                <div
+                  className={styles.enlargedThumbnailContainer}
+                  onClick={() => setEnlargedThumbnail(false)}
+                >
                   <div className={styles.enlargedThumbnailWrapper}>
-                    <Image 
-                      src={tiktokData.thumbnail} 
-                      alt="Enlarged thumbnail" 
+                    <Image
+                      src={tiktokData.thumbnail}
+                      alt="Enlarged thumbnail"
                       className={styles.enlargedThumbnail}
                       width={500}
                       height={700}
                       unoptimized
                     />
-                    <button 
+                    <button
                       className={styles.closeEnlargedButton}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -248,9 +290,7 @@ export default function TikTokPage() {
         )}
 
         {downloadNotification && (
-          <div className={styles.notification}>
-            {downloadNotification}
-          </div>
+          <div className={styles.notification}>{downloadNotification}</div>
         )}
       </main>
     </div>

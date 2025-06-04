@@ -6,14 +6,14 @@ export interface DownloadOptions {
 }
 
 export interface MediaItem {
-  type: 'video' | 'image';  // Instagram can have videos or images
+  type: "video" | "image"; // Instagram can have videos or images
   url: string;
   thumbnailUrl?: string;
   fileName?: string;
 }
 
 export interface InstagramPostInfo {
-  reelId: string;     // Renamed from postId to reelId
+  reelId: string; // Renamed from postId to reelId
   username: string;
   caption?: string;
   likesCount?: number;
@@ -25,7 +25,7 @@ export interface InstagramPostInfo {
   }[];
 }
 
-export type InstagramContentType = 'reel' | 'unknown';
+export type InstagramContentType = "reel" | "unknown";
 
 export interface ParsingResult {
   contentType: InstagramContentType;

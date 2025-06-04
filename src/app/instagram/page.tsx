@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState, useRef, FormEvent } from 'react';
-import Link from 'next/link';
-import styles from './instagram.module.css';
+import { useState, useRef, FormEvent } from "react";
+import Link from "next/link";
+import styles from "./instagram.module.css";
 
 interface MediaItem {
-  type: 'video';
+  type: "video";
   url: string;
   thumbnailUrl?: string;
 }
@@ -24,7 +24,7 @@ interface InstagramData {
 }
 
 export default function InstagramPage() {
-  const [url, setUrl] = useState('');
+  const [url, setUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<InstagramData | null>(null);
@@ -32,37 +32,39 @@ export default function InstagramPage() {
 
   // Example URLs for user to try
   const exampleURLs = [
-    'https://www.instagram.com/reel/DGOIwPlq45w/',
-    'https://www.instagram.com/reel/C0rkA5lLY-c/',
+    "https://www.instagram.com/reel/DGOIwPlq45w/",
+    "https://www.instagram.com/reel/C0rkA5lLY-c/",
   ];
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    
+
     if (!url) return;
-    
+
     setIsLoading(true);
     setError(null);
     setData(null);
-    
+
     try {
-      const response = await fetch('/api/instagram', {
-        method: 'POST',
+      const response = await fetch("/api/instagram", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ url }),
       });
-      
+
       const result = await response.json();
-      
+
       if (!response.ok) {
-        throw new Error(result.message || 'Failed to download Instagram reel');
+        throw new Error(result.message || "Failed to download Instagram reel");
       }
-      
+
       setData(result);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      setError(
+        err instanceof Error ? err.message : "An unknown error occurred",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -83,7 +85,7 @@ export default function InstagramPage() {
           &larr; Back to Home
         </Link>
       </header>
-      
+
       <main className={styles.main}>
         <form className={styles.form} onSubmit={handleSubmit} ref={formRef}>
           <input
@@ -93,18 +95,19 @@ export default function InstagramPage() {
             value={url}
             onChange={(e) => setUrl(e.target.value)}
           />
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className={styles.submitButton}
             disabled={isLoading || !url}
           >
-            {isLoading ? 'Processing...' : 'Download'}
+            {isLoading ? "Processing..." : "Download"}
           </button>
         </form>
-        
+
         <div className={styles.instructions}>
           <p>
-            Paste the URL of an Instagram reel you want to download. Only reel URLs are supported.
+            Paste the URL of an Instagram reel you want to download. Only reel
+            URLs are supported.
           </p>
           <div className={styles.exampleContainer}>
             <span>Try with examples:</span>
@@ -121,14 +124,14 @@ export default function InstagramPage() {
             ))}
           </div>
         </div>
-        
+
         {isLoading && (
           <div className={styles.loaderContainer}>
             <div className={styles.loader}></div>
             <p>Downloading reel from Instagram...</p>
           </div>
         )}
-        
+
         {error && (
           <div className={styles.errorWithHelp}>
             <p>{error}</p>
@@ -142,12 +145,12 @@ export default function InstagramPage() {
             </div>
           </div>
         )}
-        
+
         {data && (
           <div className={styles.resultContainer}>
             <div className={styles.mediaContainer}>
-              {data.mediaItems[0].type === 'video' && (
-                <video 
+              {data.mediaItems[0].type === "video" && (
+                <video
                   className={styles.video}
                   controls
                   src={data.mediaItems[0].url}
@@ -155,28 +158,28 @@ export default function InstagramPage() {
                 ></video>
               )}
             </div>
-            
+
             <div className={styles.infoContainer}>
               <h2 className={styles.username}>{data.username}</h2>
-              
+
               {data.caption && (
                 <p className={styles.description}>{data.caption}</p>
               )}
-              
+
               <div className={styles.stats}>
                 {data.likesCount !== undefined && (
                   <div className={styles.stat}>
                     ❤️ {data.likesCount.toLocaleString()} likes
                   </div>
                 )}
-                
+
                 {data.commentsCount !== undefined && (
                   <div className={styles.stat}>
                     💬 {data.commentsCount.toLocaleString()} comments
                   </div>
                 )}
               </div>
-              
+
               <div className={styles.downloadButtons}>
                 {data.mediaItems.map((media, index) => (
                   <a
@@ -191,14 +194,14 @@ export default function InstagramPage() {
                   </a>
                 ))}
               </div>
-              
+
               {data.savedFiles && data.savedFiles.length > 0 && (
                 <div className={styles.fileInfo}>
                   <p>Files saved to public directory:</p>
                   <ul>
                     {data.savedFiles.map((file, index) => (
                       <li key={index}>
-                        <code>{file.mediaPath.split('/').pop()}</code>
+                        <code>{file.mediaPath.split("/").pop()}</code>
                       </li>
                     ))}
                   </ul>

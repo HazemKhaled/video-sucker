@@ -26,19 +26,22 @@ pnpm add instagram-video-downloader
 ## Usage
 
 ```typescript
-import { downloadInstagramMedia } from 'instagram-video-downloader';
+import { downloadInstagramMedia } from "instagram-video-downloader";
 
 async function downloadContent() {
   try {
-    const result = await downloadInstagramMedia('https://www.instagram.com/p/EXAMPLE_POST_ID/', {
-      outputDir: './downloads'
-    });
-    
-    console.log('Download successful!');
-    console.log('Username:', result.username);
-    console.log('Caption:', result.caption);
-    console.log('Media items:', result.mediaItems.length);
-    
+    const result = await downloadInstagramMedia(
+      "https://www.instagram.com/p/EXAMPLE_POST_ID/",
+      {
+        outputDir: "./downloads",
+      },
+    );
+
+    console.log("Download successful!");
+    console.log("Username:", result.username);
+    console.log("Caption:", result.caption);
+    console.log("Media items:", result.mediaItems.length);
+
     // Access saved file paths
     if (result.savedFiles) {
       result.savedFiles.forEach((file, index) => {
@@ -49,7 +52,7 @@ async function downloadContent() {
       });
     }
   } catch (error) {
-    console.error('Error downloading Instagram content:', error);
+    console.error("Error downloading Instagram content:", error);
   }
 }
 
@@ -77,6 +80,7 @@ The tests are located in the `src/__tests__` directory and use the Node.js built
 Instagram frequently updates their platform to make it more difficult to extract video content. This package includes advanced techniques to handle these changes, particularly for Instagram Reels which use different embedding methods than regular posts.
 
 Our latest update (Method 4) provides:
+
 - Session-based authentication to bypass basic anti-bot measures
 - Advanced meta tag and script pattern extraction
 - Multiple fallback mechanisms

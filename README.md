@@ -39,6 +39,7 @@ video-sucker/
 A standalone Node.js package for downloading TikTok videos with multiple fallback methods to ensure reliability. This package can be used independently in other projects.
 
 #### Features:
+
 - Extract video ID and username from TikTok URLs
 - Download videos and thumbnails
 - Multiple fallback methods for better reliability
@@ -49,6 +50,7 @@ A standalone Node.js package for downloading TikTok videos with multiple fallbac
 A standalone Node.js package for downloading Instagram reels with multiple extraction methods to handle Instagram's anti-bot measures. This package can be used independently in other projects.
 
 #### Features:
+
 - Extract reel ID and metadata from Instagram URLs
 - Download videos and thumbnails
 - 5 different extraction methods for maximum reliability
@@ -100,12 +102,14 @@ pnpm run start
 ## Usage
 
 ### TikTok Downloader
+
 1. Open the TikTok page at `/tiktok`
 2. Enter a TikTok URL or click the example link
 3. The video will be downloaded and displayed
 4. You can download the video and thumbnail
 
 ### Instagram Downloader
+
 1. Open the Instagram page at `/instagram`
 2. Enter an Instagram reel URL
 3. The reel will be downloaded and displayed
@@ -139,24 +143,30 @@ npm install github:username/video-sucker#packages/instagram-video-downloader
 
 ```javascript
 // TikTok Example
-import { downloadTikTokVideo } from 'tiktok-video-downloader';
+import { downloadTikTokVideo } from "tiktok-video-downloader";
 
-const tikTokResult = await downloadTikTokVideo('https://www.tiktok.com/@username/video/1234567890', {
-  outputDir: './downloads'
-});
+const tikTokResult = await downloadTikTokVideo(
+  "https://www.tiktok.com/@username/video/1234567890",
+  {
+    outputDir: "./downloads",
+  },
+);
 
-console.log('TikTok video downloaded to:', tikTokResult.video);
-console.log('TikTok thumbnail downloaded to:', tikTokResult.thumbnail);
+console.log("TikTok video downloaded to:", tikTokResult.video);
+console.log("TikTok thumbnail downloaded to:", tikTokResult.thumbnail);
 
 // Instagram Example
-import { downloadInstagramMedia } from 'instagram-video-downloader';
+import { downloadInstagramMedia } from "instagram-video-downloader";
 
-const instagramResult = await downloadInstagramMedia('https://www.instagram.com/reel/ABC123/', {
-  outputDir: './downloads'
-});
+const instagramResult = await downloadInstagramMedia(
+  "https://www.instagram.com/reel/ABC123/",
+  {
+    outputDir: "./downloads",
+  },
+);
 
-console.log('Instagram reel downloaded:', instagramResult.savedFiles);
-console.log('Reel by:', instagramResult.username);
+console.log("Instagram reel downloaded:", instagramResult.savedFiles);
+console.log("Reel by:", instagramResult.username);
 ```
 
 ## Learn More

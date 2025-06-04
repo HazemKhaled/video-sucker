@@ -5,8 +5,8 @@ import {
   downloadTikTokVideoMethod2,
   downloadTikTokVideoMethod3,
   type TikTokVideoInfo,
-  type DownloadOptions
-} from './downloader.js';
+  type DownloadOptions,
+} from "./downloader.js";
 
 export {
   downloadTikTokVideo,
@@ -15,7 +15,7 @@ export {
   downloadTikTokVideoMethod2,
   downloadTikTokVideoMethod3,
   type TikTokVideoInfo,
-  type DownloadOptions
+  type DownloadOptions,
 };
 
 // Default export for easier importing
@@ -24,7 +24,7 @@ const defaultExport = {
   extractTikTokInfo,
   downloadTikTokVideoMethod1,
   downloadTikTokVideoMethod2,
-  downloadTikTokVideoMethod3
+  downloadTikTokVideoMethod3,
 };
 
 export default defaultExport;

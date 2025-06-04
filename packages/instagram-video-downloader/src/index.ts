@@ -1,14 +1,23 @@
 // Export the main functions and types from the package
-export { downloadInstagramMedia } from './downloader.js';
+export { downloadInstagramMedia } from "./downloader.js";
 export {
   downloadInstagramMediaMethod1,
   downloadInstagramMediaMethod2,
   downloadInstagramMediaMethod3,
   downloadInstagramMediaMethod4,
-  downloadInstagramMediaMethod5
-} from './downloader.js';
-export { parseInstagramUrl, getContentType, extractReelId, extractPostId } from './parser.js';
-export { normalizeInstagramUrl, isValidInstagramUrl, getContentIdFromPath } from './url-utils.js';
+  downloadInstagramMediaMethod5,
+} from "./downloader.js";
+export {
+  parseInstagramUrl,
+  getContentType,
+  extractReelId,
+  extractPostId,
+} from "./parser.js";
+export {
+  normalizeInstagramUrl,
+  isValidInstagramUrl,
+  getContentIdFromPath,
+} from "./url-utils.js";
 
 // Export types
 export type {
@@ -16,5 +25,5 @@ export type {
   MediaItem,
   InstagramPostInfo,
   InstagramContentType,
-  ParsingResult
-} from './types.js';
+  ParsingResult,
+} from "./types.js";

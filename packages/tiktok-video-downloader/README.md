@@ -15,25 +15,28 @@ pnpm add tiktok-video-downloader
 ## Usage
 
 ```typescript
-import { downloadTikTokVideo } from 'tiktok-video-downloader';
+import { downloadTikTokVideo } from "tiktok-video-downloader";
 
 // Define download options
 const options = {
-  outputDir: './downloads' // Directory where videos will be saved
+  outputDir: "./downloads", // Directory where videos will be saved
 };
 
 // Download a TikTok video
 async function downloadVideo() {
   try {
-    const result = await downloadTikTokVideo('https://www.tiktok.com/@username/video/1234567890', options);
-    
-    console.log('Video downloaded successfully!');
-    console.log('Video path:', result.video);
-    console.log('Thumbnail path:', result.thumbnail);
-    console.log('Username:', result.username);
-    console.log('Description:', result.description);
+    const result = await downloadTikTokVideo(
+      "https://www.tiktok.com/@username/video/1234567890",
+      options,
+    );
+
+    console.log("Video downloaded successfully!");
+    console.log("Video path:", result.video);
+    console.log("Thumbnail path:", result.thumbnail);
+    console.log("Username:", result.username);
+    console.log("Description:", result.description);
   } catch (error) {
-    console.error('Error downloading video:', error);
+    console.error("Error downloading video:", error);
   }
 }
 
@@ -75,6 +78,7 @@ Extracts the video ID and username from a TikTok URL.
 #### Returns
 
 An object with:
+
 - `videoId` (string): The TikTok video ID
 - `username` (string): The TikTok username
 
