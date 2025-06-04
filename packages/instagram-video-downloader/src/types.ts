@@ -8,7 +8,7 @@ export interface DownloadOptions {
 }
 
 export interface MediaItem {
-  type: 'video';  // Instagram reels are only videos
+  type: 'video' | 'image';  // Instagram can have videos or images
   url: string;
   thumbnailUrl?: string;
   fileName?: string;
