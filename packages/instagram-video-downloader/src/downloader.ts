@@ -637,300 +637,363 @@ export async function downloadInstagramMediaMethod3(
 
 /**
  * Fourth method to download Instagram media
- * This is an advanced method specifically for the latest Reel format
+ * This is an advanced method specifically for the latest Reel format using modern techniques
  */
 export async function downloadInstagramMediaMethod4(
-  url: string, 
+  url: string,
   options: DownloadOptions = {}
 ): Promise<InstagramPostInfo> {
   const { outputDir = path.join(process.cwd(), 'public') } = options;
-  
+
   try {
     console.log('Attempting advanced method for Instagram Reel extraction');
-    
-    // First, we need to establish a proper session with Instagram
-    // Instagram's anti-bot measures have become more sophisticated
-    const initialSessionResponse = await axios.get('https://www.instagram.com/', {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1',
-      },
-      maxRedirects: 5
-    });
-    
-    // Extract cookies from the initial session
-    const cookies = initialSessionResponse.headers['set-cookie'] || [];
-    const cookieJar: Record<string, string> = {};
-    
-    cookies.forEach(cookie => {
-      const [keyValue] = cookie.split(';');
-      const [key, value] = keyValue.split('=');
-      cookieJar[key] = value;
-    });
-    
-    // Format cookies for the next request
-    const cookieString = Object.entries(cookieJar)
-      .map(([key, value]) => `${key}=${value}`)
-      .join('; ');
-    
-    // Now, make the actual request to the reel URL with these cookies
-    // and Instagram-specific mobile headers that mimic the app
-    const response = await axios.get(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1',
-        'sec-ch-ua': '"Safari";v="17", "Chromium";v="125", "Not.A/Brand";v="8"',
-        'sec-ch-ua-mobile': '?1',
-        'sec-ch-ua-platform': '"iOS"',
-        'Sec-Fetch-Site': 'none',
-        'Sec-Fetch-Mode': 'navigate',
-        'Sec-Fetch-User': '?1',
-        'Sec-Fetch-Dest': 'document',
-        'Cookie': cookieString,
-        'X-IG-App-ID': '936619743392459',
-        'X-ASBD-ID': '129477',
-        'X-IG-WWW-Claim': '0',
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      maxRedirects: 5,
-      timeout: 30000
-    });
-    
-    if (!response.data) {
-      throw new Error('Empty response from Instagram Reel URL');
+
+    // Extract shortcode from URL
+    const shortcodeMatch = url.match(/\/reel\/([^\/\?]+)/);
+    if (!shortcodeMatch || !shortcodeMatch[1]) {
+      throw new Error('Could not extract shortcode from URL');
     }
-    
-    // Parse the HTML with cheerio
-    const html = response.data;
-    const $ = cheerio.load(html);
-    
-    // Modern approach for 2025: Extract video URL from embedded data
-    // Instagram now often embeds video URL in script blocks with specific patterns
-    
-    // First, try the direct approach with meta tags
-    let videoUrl = $('meta[property="og:video"]').attr('content');
-    let thumbnailUrl = $('meta[property="og:image"]').attr('content');
-    let username = $('meta[property="og:title"]').attr('content')?.split(' on Instagram')[0] || 'unknown_user';
-    let caption = $('meta[property="og:description"]').attr('content') || '';
-    
-    if (!videoUrl) {
-      // Search for the new data format in scripts
-      // Instagram now embeds a lot of data in __APOLLO_STATE__ or similar objects
-      const scriptTags = $('script').toArray();
-      
-      for (const script of scriptTags) {
-        const content = $(script).html() || '';
-        
-        // Check for various data patterns in modern Instagram
-        const patterns = [
-          // The 2025 format often includes these patterns
-          /\\"video_url\\":\s*\\"([^\\]+)\\"/,
-          /"video_url":\s*"([^"]+)"/,
-          /"playback_url":\s*"([^"]+)"/,
-          /"video_versions":\s*\[\s*{\s*"type":\s*\d+,\s*"url":\s*"([^"]+)"/,
-          /"is_unified_video":\s*true,[\s\S]*?"video_url":\s*"([^"]+)"/,
-          /videoUrl["']?\s*:\s*["']([^"']+)["']/,
-          /"src"\s*:\s*"(https:\/\/[^"]+\.mp4[^"]*)"/, 
-          // For .mov videos
-          /"src"\s*:\s*"(https:\/\/[^"]+\.mov[^"]*)"/ 
+    const shortcode = shortcodeMatch[1];
+
+    // Try the Instagram embed endpoint first - this often works better
+    try {
+      const embedUrl = `https://www.instagram.com/p/${shortcode}/embed/`;
+      const embedResponse = await axios.get(embedUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Referer': 'https://www.instagram.com/',
+          'Connection': 'keep-alive',
+        },
+        timeout: 15000
+      });
+
+      if (embedResponse.status === 200 && embedResponse.data) {
+        const embedHtml = embedResponse.data;
+
+        // Look for video URL in embed page
+        const videoPatterns = [
+          /"video_url":"([^"]+)"/,
+          /"src":"(https:\/\/[^"]+\.mp4[^"]*)"/,
+          /video_url":\s*"([^"]+)"/,
+          /"contentUrl":"([^"]+)"/
         ];
-        
-        for (const pattern of patterns) {
-          const match = content.match(pattern);
+
+        let videoUrl = null;
+        for (const pattern of videoPatterns) {
+          const match = embedHtml.match(pattern);
           if (match && match[1]) {
             videoUrl = match[1].replace(/\\u0026/g, '&').replace(/\\\//g, '/');
-            console.log('Found video URL in script pattern:', pattern);
             break;
           }
         }
-        
-        // If we found a video URL, we can break out of the loop
-        if (videoUrl) break;
-        
-        // Look for additional metadata in the scripts
-        if (!username || username === 'unknown_user') {
-          const usernamePatterns = [
-            /"username":\s*"([^"]+)"/,
-            /\\"username\\":\s*\\"([^\\]+)\\"/
-          ];
-          
-          for (const pattern of usernamePatterns) {
-            const match = content.match(pattern);
-            if (match && match[1]) {
-              username = match[1];
-              break;
-            }
+
+        if (videoUrl) {
+          console.log('Found video URL in embed page:', videoUrl);
+
+          // Extract other metadata
+          let thumbnailUrl = null;
+          let username = 'unknown_user';
+          let caption = '';
+
+          const thumbnailMatch = embedHtml.match(/"display_url":"([^"]+)"/);
+          if (thumbnailMatch) {
+            thumbnailUrl = thumbnailMatch[1].replace(/\\\//g, '/');
           }
-        }
-        
-        if (!caption) {
-          const captionPatterns = [
-            /"caption":\s*"([^"]+)"/,
-            /"edge_media_to_caption":\s*{\s*"edges":\s*\[\s*{\s*"node":\s*{\s*"text":\s*"([^"]+)"/,
-            /\\"caption\\":\s*\\"([^\\]+)\\"/
-          ];
-          
-          for (const pattern of captionPatterns) {
-            const match = content.match(pattern);
-            if (match && match[1]) {
-              caption = match[1].replace(/\\n/g, '\n');
-              break;
-            }
+
+          const usernameMatch = embedHtml.match(/"username":"([^"]+)"/);
+          if (usernameMatch) {
+            username = usernameMatch[1];
           }
-        }
-      }
-    }
-    
-    // Last resort: Try to extract from the HTML directly using more advanced patterns
-    if (!videoUrl) {
-      const htmlVideoPatterns = [
-        // URL-encoded video patterns
-        /(?:https?:\\\/\\\/[^"'\s]+\.mp4[^"'\s]*)/g,
-        // Direct mp4 URLs
-        /(?:https?:\/\/[^"'\s]+\.mp4[^"'\s]*)/g,
-        // Escaped URL patterns
-        /\\["'](?:https?:\\\/\\\/[^"'\s]+\.mp4[^"'\s]*)\\["']/g
-      ];
-      
-      for (const pattern of htmlVideoPatterns) {
-        const matches = html.match(pattern);
-        if (matches && matches.length > 0) {
-          // Sometimes these patterns can match multiple URLs, so find the most suitable one
-          // (usually the longest and the one with highest quality)
-          let bestUrl = matches[0];
-          for (const match of matches) {
-            // Prefer URLs with higher quality indicators
-            if (match.includes('high') || match.includes('1080') || match.length > bestUrl.length) {
-              bestUrl = match;
-            }
+
+          const captionMatch = embedHtml.match(/"caption":"([^"]+)"/);
+          if (captionMatch) {
+            caption = captionMatch[1];
           }
-          
-          videoUrl = bestUrl.replace(/\\\//g, '/').replace(/\\u0026/g, '&');
-          console.log('Found video URL in HTML pattern:', pattern);
-          break;
+
+          const postInfo: InstagramPostInfo = {
+            reelId: shortcode,
+            username,
+            caption,
+            mediaItems: [{
+              type: 'video',
+              url: videoUrl,
+              thumbnailUrl: thumbnailUrl
+            }]
+          };
+
+          await downloadMediaItems(postInfo, outputDir);
+          return postInfo;
         }
       }
+    } catch (embedError) {
+      console.log('Embed method failed, trying alternative approach:', embedError instanceof Error ? embedError.message : 'Unknown error');
     }
-    
-    // New in 2025: Try the GraphQL API as a last resort
-    if (!videoUrl) {
-      try {
-        // Extract the media shortcode from the URL
-        const shortcodeMatch = url.match(/\/reel\/([^\/\?]+)/);
-        if (shortcodeMatch && shortcodeMatch[1]) {
-          const shortcode = shortcodeMatch[1];
-          
-          // Use the Instagram GraphQL API directly
-          const graphqlResponse = await axios.get(`https://www.instagram.com/graphql/query/?query_hash=b3055c01b4b222b8a47dc12b090e4e64&variables={"shortcode":"${shortcode}"}`, {
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
-              'X-IG-App-ID': '936619743392459',
-              'X-Requested-With': 'XMLHttpRequest',
-              'Cookie': cookieString
-            }
-          });
-          
-          if (graphqlResponse.data && graphqlResponse.data.data && graphqlResponse.data.data.shortcode_media) {
-            const mediaData = graphqlResponse.data.data.shortcode_media;
-            videoUrl = mediaData.video_url;
-            thumbnailUrl = thumbnailUrl || mediaData.display_url;
-            username = username !== 'unknown_user' ? username : (mediaData.owner?.username || 'unknown_user');
-            caption = caption || mediaData.edge_media_to_caption?.edges?.[0]?.node?.text || '';
-          }
-        }
-      } catch (e) {
-        console.error('Error fetching from GraphQL API:', e);
-      }
-    }
-    
-    // As a final fallback, try a more direct approach with the OEmbed API
-    if (!videoUrl) {
-      try {
-        const oembedResponse = await axios.get(`https://www.instagram.com/oembed/?url=${encodeURIComponent(url)}`, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1'
-          }
-        });
-        
-        if (oembedResponse.data) {
-          // We still don't have the video URL directly, but we have better metadata
-          thumbnailUrl = oembedResponse.data.thumbnail_url;
-          username = oembedResponse.data.author_name || username;
-          
-          // For oEmbed, if we have a thumbnail but no video, try one more approach
-          if (thumbnailUrl && !videoUrl) {
-            // Instagram thumbnails often follow a pattern, try to derive video URL
-            // This is a bit of a hack, but sometimes works as a last resort
-            videoUrl = thumbnailUrl.replace(/\/[^\/]+\.jpg/, '/video.mp4');
-          }
-        }
-      } catch (e) {
-        console.error('Error fetching from OEmbed API:', e);
-      }
-    }
-    
-    if (!videoUrl && !thumbnailUrl) {
-      throw new Error('Could not find any media URLs in Instagram content after multiple attempts');
-    }
-    
-    // Extract the reel ID from the URL
-    const postIdMatch = url.match(/\/reel\/([^\/\?]+)/i);
-    const reelId = postIdMatch?.[1] || 'unknown';
-    
-    // Create post info object
-    const postInfo: InstagramPostInfo = {
-      reelId,
-      username,
-      caption,
-      mediaItems: []
-    };
-    
-    // Add video or image
-    if (videoUrl) {
-      // Make sure the URL is properly formatted
-      if (videoUrl.startsWith('//')) {
-        videoUrl = `https:${videoUrl}`;
-      } else if (videoUrl.startsWith('/')) {
-        videoUrl = `https://www.instagram.com${videoUrl}`;
-      }
-      
-      // Clean up any encoded characters
-      videoUrl = videoUrl.replace(/\\u0026/g, '&')
-                         .replace(/\\u003c/g, '<')
-                         .replace(/\\u003e/g, '>')
-                         .replace(/\\\//g, '/');
-      
-      postInfo.mediaItems.push({
-        type: 'video',
-        url: videoUrl,
-        thumbnailUrl: thumbnailUrl
+
+    // Try the oEmbed API as a fallback
+    try {
+      const oembedUrl = `https://www.instagram.com/oembed/?url=${encodeURIComponent(url)}`;
+      const oembedResponse = await axios.get(oembedUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
+          'Accept': 'application/json',
+          'Accept-Language': 'en-US,en;q=0.9',
+        },
+        timeout: 10000
       });
-    } else if (thumbnailUrl) {
-      if (thumbnailUrl.startsWith('//')) {
-        thumbnailUrl = `https:${thumbnailUrl}`;
+
+      if (oembedResponse.status === 200 && oembedResponse.data) {
+        const oembedData = oembedResponse.data;
+
+        // oEmbed gives us basic metadata, but we need to extract video URL from the HTML
+        if (oembedData.html) {
+          const videoUrlMatch = oembedData.html.match(/src="([^"]+)"/);
+          if (videoUrlMatch && videoUrlMatch[1]) {
+            // This is usually an iframe src, we need to fetch it to get the actual video
+            try {
+              const iframeResponse = await axios.get(videoUrlMatch[1], {
+                headers: {
+                  'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
+                  'Referer': 'https://www.instagram.com/',
+                },
+                timeout: 10000
+              });
+
+              if (iframeResponse.status === 200) {
+                const iframeHtml = iframeResponse.data;
+
+                // Look for video URL in iframe content
+                const videoPatterns = [
+                  /"video_url":"([^"]+)"/,
+                  /"src":"(https:\/\/[^"]+\.mp4[^"]*)"/,
+                  /video_url":\s*"([^"]+)"/,
+                  /"contentUrl":"([^"]+)"/,
+                  /"playback_url":"([^"]+)"/
+                ];
+
+                let videoUrl = null;
+                for (const pattern of videoPatterns) {
+                  const match = iframeHtml.match(pattern);
+                  if (match && match[1]) {
+                    videoUrl = match[1].replace(/\\u0026/g, '&').replace(/\\\//g, '/');
+                    break;
+                  }
+                }
+
+                if (videoUrl) {
+                  console.log('Found video URL via oEmbed iframe:', videoUrl);
+
+                  const postInfo: InstagramPostInfo = {
+                    reelId: shortcode,
+                    username: oembedData.author_name || 'unknown_user',
+                    caption: oembedData.title || '',
+                    mediaItems: [{
+                      type: 'video',
+                      url: videoUrl,
+                      thumbnailUrl: oembedData.thumbnail_url
+                    }]
+                  };
+
+                  await downloadMediaItems(postInfo, outputDir);
+                  return postInfo;
+                }
+              }
+            } catch (iframeError) {
+              console.log('Failed to fetch iframe content:', iframeError instanceof Error ? iframeError.message : 'Unknown error');
+            }
+          }
+        }
       }
-      
-      postInfo.mediaItems.push({
-        type: 'video',
-        url: thumbnailUrl,
-        thumbnailUrl: thumbnailUrl
-      });
+    } catch (oembedError) {
+      console.log('oEmbed method failed:', oembedError instanceof Error ? oembedError.message : 'Unknown error');
     }
-    
-    // Download all media items
-    await downloadMediaItems(postInfo, outputDir);
-    
-    return postInfo;
+
+    // If all methods fail, throw an error
+    throw new Error('Could not extract video URL using any available method. Instagram may have updated their anti-bot measures.');
   } catch (error) {
     console.error('Error in method 4:', error);
+    throw error;
+  }
+}
+
+/**
+ * Fifth method to download Instagram media
+ * This method uses a different approach with session management and modern headers
+ */
+export async function downloadInstagramMediaMethod5(
+  url: string,
+  options: DownloadOptions = {}
+): Promise<InstagramPostInfo> {
+  const { outputDir = path.join(process.cwd(), 'public') } = options;
+
+  try {
+    console.log('Attempting method 5 with session management');
+
+    // Extract shortcode from URL
+    const shortcodeMatch = url.match(/\/reel\/([^\/\?]+)/);
+    if (!shortcodeMatch || !shortcodeMatch[1]) {
+      throw new Error('Could not extract shortcode from URL');
+    }
+    const shortcode = shortcodeMatch[1];
+
+    // First establish a session with Instagram
+    const sessionResponse = await axios.get('https://www.instagram.com/', {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'none',
+        'Sec-Fetch-User': '?1',
+        'Cache-Control': 'max-age=0'
+      },
+      timeout: 15000
+    });
+
+    // Extract cookies from session
+    const cookies = sessionResponse.headers['set-cookie'] || [];
+    const cookieString = cookies.map(cookie => cookie.split(';')[0]).join('; ');
+
+    // Now try to access the reel with the session
+    const reelResponse = await axios.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'same-origin',
+        'Sec-Fetch-User': '?1',
+        'Referer': 'https://www.instagram.com/',
+        'Cookie': cookieString,
+        'Cache-Control': 'max-age=0'
+      },
+      timeout: 20000
+    });
+
+    if (reelResponse.status !== 200 || !reelResponse.data) {
+      throw new Error('Failed to fetch reel content');
+    }
+
+    const html = reelResponse.data;
+
+    // Try to extract video URL using multiple patterns
+    const videoPatterns = [
+      // Modern Instagram patterns
+      /"video_url":"([^"]+)"/g,
+      /"playback_url":"([^"]+)"/g,
+      /"src":"(https:\/\/[^"]+\.mp4[^"]*)"/g,
+      /"contentUrl":"([^"]+)"/g,
+      // Fallback patterns
+      /video_url":\s*"([^"]+)"/g,
+      /playback_url":\s*"([^"]+)"/g,
+      // Direct URL patterns
+      /(https:\/\/[^"'\s]+\.mp4[^"'\s]*)/g
+    ];
+
+    let videoUrl = null;
+    let allMatches: string[] = [];
+
+    for (const pattern of videoPatterns) {
+      const matches = [...html.matchAll(pattern)];
+      for (const match of matches) {
+        if (match[1]) {
+          const cleanUrl = match[1].replace(/\\u0026/g, '&').replace(/\\\//g, '/');
+          allMatches.push(cleanUrl);
+        }
+      }
+    }
+
+    // Filter and select the best video URL
+    const validVideoUrls = allMatches.filter(url =>
+      url.includes('.mp4') &&
+      (url.includes('scontent') || url.includes('cdninstagram') || url.includes('fbcdn'))
+    );
+
+    if (validVideoUrls.length > 0) {
+      // Prefer higher quality URLs (usually longer URLs with more parameters)
+      videoUrl = validVideoUrls.sort((a, b) => b.length - a.length)[0];
+      console.log('Found video URL:', videoUrl);
+    }
+
+    // Extract metadata
+    let thumbnailUrl = null;
+    let username = 'unknown_user';
+    let caption = '';
+
+    // Extract thumbnail
+    const thumbnailPatterns = [
+      /"display_url":"([^"]+)"/,
+      /"thumbnail_url":"([^"]+)"/,
+      /property="og:image"\s+content="([^"]+)"/
+    ];
+
+    for (const pattern of thumbnailPatterns) {
+      const match = html.match(pattern);
+      if (match && match[1]) {
+        thumbnailUrl = match[1].replace(/\\\//g, '/');
+        break;
+      }
+    }
+
+    // Extract username
+    const usernamePatterns = [
+      /"username":"([^"]+)"/,
+      /"owner":\s*{\s*"username":"([^"]+)"/,
+      /property="og:title"\s+content="([^"•]+)/
+    ];
+
+    for (const pattern of usernamePatterns) {
+      const match = html.match(pattern);
+      if (match && match[1]) {
+        username = match[1].trim();
+        break;
+      }
+    }
+
+    // Extract caption
+    const captionPatterns = [
+      /"caption":"([^"]+)"/,
+      /"text":"([^"]+)"/,
+      /property="og:description"\s+content="([^"]+)"/
+    ];
+
+    for (const pattern of captionPatterns) {
+      const match = html.match(pattern);
+      if (match && match[1]) {
+        caption = match[1];
+        break;
+      }
+    }
+
+    if (!videoUrl && !thumbnailUrl) {
+      throw new Error('Could not find any media URLs in the content');
+    }
+
+    const postInfo: InstagramPostInfo = {
+      reelId: shortcode,
+      username,
+      caption,
+      mediaItems: [{
+        type: 'video',
+        url: videoUrl || thumbnailUrl || '',
+        thumbnailUrl: thumbnailUrl
+      }]
+    };
+
+    await downloadMediaItems(postInfo, outputDir);
+    return postInfo;
+  } catch (error) {
+    console.error('Error in method 5:', error);
     throw error;
   }
 }
@@ -992,15 +1055,41 @@ export async function downloadInstagramMedia(
           if (!isReelUrl) {
             return await downloadInstagramMediaMethod4(normalizedUrl, options);
           } else {
-            throw thirdError; // We already tried Method4 for Reels
+            // For Reels, try Method5 as a final attempt
+            return await downloadInstagramMediaMethod5(normalizedUrl, options);
           }
         } catch (fourthError) {
-          // If all methods fail, throw a comprehensive error
-          throw new Error(
-            'All download methods failed. Instagram may have updated their website ' +
-            'or the URL may be invalid. Please try again later. ' +
-            'Error: ' + (fourthError instanceof Error ? fourthError.message : 'Unknown error')
-          );
+          console.warn('Fourth method failed, trying fifth method...',
+            fourthError instanceof Error ? fourthError.message : 'Unknown error');
+
+          try {
+            // Try Method5 as the final fallback
+            return await downloadInstagramMediaMethod5(normalizedUrl, options);
+          } catch (fifthError) {
+            // If all methods fail, provide helpful error message with guidance
+            const errorMessage = isReelUrl
+              ? 'Instagram Reel download failed. Instagram has implemented strong anti-bot measures that prevent automated downloads. ' +
+                'This may be due to:\n' +
+                '• Instagram requiring user login\n' +
+                '• Rate limiting or IP blocking\n' +
+                '• Geographic restrictions\n' +
+                '• The content being private or deleted\n' +
+                '• Recent changes to Instagram\'s security measures\n\n' +
+                'Suggestions:\n' +
+                '• Try again later (rate limits may reset)\n' +
+                '• Use a different network/IP address\n' +
+                '• Check if the content is publicly accessible\n' +
+                '• Consider using Instagram\'s official tools or browser-based solutions'
+              : 'Instagram post download failed. All available methods have been exhausted. ' +
+                'This may be due to Instagram\'s anti-bot measures or the content being private/unavailable.\n\n' +
+                'Suggestions:\n' +
+                '• Verify the URL is correct and publicly accessible\n' +
+                '• Try again later\n' +
+                '• Check if the content requires login to view';
+
+            throw new Error(errorMessage + '\n\nTechnical details: ' +
+              (fifthError instanceof Error ? fifthError.message : 'Unknown error'));
+          }
         }
       }
     }
