@@ -1,12 +1,14 @@
 import axios from 'axios';
-import * as path from 'path';
 import { InstagramPostInfo, DownloadOptions } from '../types.js';
-import { 
-  downloadMediaItems, 
-  extractShortcode, 
+import {
+  downloadMediaItems,
+  extractShortcode,
+  getDefaultOutputDir,
   VIDEO_PATTERNS,
   cleanVideoUrl,
-  filterValidVideoUrls
+  filterValidVideoUrls,
+  createPostInfo,
+  addMediaItem
 } from './common.js';
 
 /**
@@ -17,7 +19,7 @@ export async function downloadInstagramMediaMethod5(
   url: string, 
   options: DownloadOptions = {}
 ): Promise<InstagramPostInfo> {
-  const { outputDir = path.join(process.cwd(), 'public') } = options;
+  const { outputDir = getDefaultOutputDir() } = options;
   
   try {
     console.log('Attempting method 5 with session management');
@@ -150,16 +152,8 @@ export async function downloadInstagramMediaMethod5(
       throw new Error('Could not find any media URLs in the content');
     }
     
-    const postInfo: InstagramPostInfo = {
-      reelId: shortcode,
-      username,
-      caption,
-      mediaItems: [{
-        type: 'video',
-        url: videoUrl || thumbnailUrl || '',
-        thumbnailUrl: thumbnailUrl
-      }]
-    };
+    const postInfo = createPostInfo(shortcode, username, caption);
+    addMediaItem(postInfo, 'video', videoUrl || thumbnailUrl || '', thumbnailUrl);
     
     await downloadMediaItems(postInfo, outputDir);
     return postInfo;

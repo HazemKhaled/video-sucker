@@ -2,8 +2,6 @@
 
 export interface DownloadOptions {
   outputDir?: string;
-  fileName?: string;
-  saveMetadata?: boolean;
   userAgent?: string;
 }
 
@@ -18,7 +16,6 @@ export interface InstagramPostInfo {
   reelId: string;     // Renamed from postId to reelId
   username: string;
   caption?: string;
-  timestamp?: string;
   likesCount?: number;
   commentsCount?: number;
   mediaItems: MediaItem[];

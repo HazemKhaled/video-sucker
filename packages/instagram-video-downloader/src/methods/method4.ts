@@ -1,7 +1,12 @@
 import axios from 'axios';
-import * as path from 'path';
 import { InstagramPostInfo, DownloadOptions } from '../types.js';
-import { downloadMediaItems, extractShortcode } from './common.js';
+import {
+  downloadMediaItems,
+  extractShortcode,
+  getDefaultOutputDir,
+  createPostInfo,
+  addMediaItem
+} from './common.js';
 
 /**
  * Fourth method to download Instagram media
@@ -11,7 +16,7 @@ export async function downloadInstagramMediaMethod4(
   url: string, 
   options: DownloadOptions = {}
 ): Promise<InstagramPostInfo> {
-  const { outputDir = path.join(process.cwd(), 'public') } = options;
+  const { outputDir = getDefaultOutputDir() } = options;
   
   try {
     console.log('Attempting advanced method for Instagram Reel extraction');
@@ -77,16 +82,8 @@ export async function downloadInstagramMediaMethod4(
             caption = captionMatch[1];
           }
           
-          const postInfo: InstagramPostInfo = {
-            reelId: shortcode,
-            username,
-            caption,
-            mediaItems: [{
-              type: 'video',
-              url: videoUrl,
-              thumbnailUrl: thumbnailUrl
-            }]
-          };
+          const postInfo = createPostInfo(shortcode, username, caption);
+          addMediaItem(postInfo, 'video', videoUrl, thumbnailUrl);
           
           await downloadMediaItems(postInfo, outputDir);
           return postInfo;
@@ -149,16 +146,12 @@ export async function downloadInstagramMediaMethod4(
                 if (videoUrl) {
                   console.log('Found video URL via oEmbed iframe:', videoUrl);
                   
-                  const postInfo: InstagramPostInfo = {
-                    reelId: shortcode,
-                    username: oembedData.author_name || 'unknown_user',
-                    caption: oembedData.title || '',
-                    mediaItems: [{
-                      type: 'video',
-                      url: videoUrl,
-                      thumbnailUrl: oembedData.thumbnail_url
-                    }]
-                  };
+                  const postInfo = createPostInfo(
+                    shortcode,
+                    oembedData.author_name || 'unknown_user',
+                    oembedData.title || ''
+                  );
+                  addMediaItem(postInfo, 'video', videoUrl, oembedData.thumbnail_url);
                   
                   await downloadMediaItems(postInfo, outputDir);
                   return postInfo;

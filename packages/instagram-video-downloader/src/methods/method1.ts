@@ -1,7 +1,13 @@
 import axios from 'axios';
-import * as path from 'path';
 import { InstagramPostInfo, DownloadOptions } from '../types.js';
-import { downloadMediaItems, extractShortcode } from './common.js';
+import {
+  downloadMediaItems,
+  extractShortcode,
+  getDefaultOutputDir,
+  getMobileHeaders,
+  createPostInfo,
+  addMediaItem
+} from './common.js';
 
 /**
  * First method to download Instagram media
@@ -11,29 +17,14 @@ export async function downloadInstagramMediaMethod1(
   url: string, 
   options: DownloadOptions = {}
 ): Promise<InstagramPostInfo> {
-  const { outputDir = path.join(process.cwd(), 'public') } = options;
+  const { outputDir = getDefaultOutputDir() } = options;
   
   try {
     console.log('Attempting method 1: Direct extraction');
     
     // Make a direct request to Instagram with a modern mobile user agent
     const response = await axios.get(url, {
-      headers: {
-        'User-Agent': options.userAgent || 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-        'Referer': 'https://www.google.com/',
-        'sec-ch-ua': '"Not/A)Brand";v="99", "Google Chrome";v="125", "Chromium";v="125"',
-        'sec-ch-ua-mobile': '?1',
-        'sec-ch-ua-platform': '"iOS"',
-        'Sec-Fetch-Site': 'none',
-        'Sec-Fetch-Mode': 'navigate',
-        'Sec-Fetch-User': '?1',
-        'Sec-Fetch-Dest': 'document',
-        'Upgrade-Insecure-Requests': '1',
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache'
-      },
+      headers: getMobileHeaders(options.userAgent),
       maxRedirects: 5,
       timeout: 30000
     });
@@ -189,45 +180,15 @@ export async function downloadInstagramMediaMethod1(
 
     // Extract the post ID from the URL
     const shortcode = extractShortcode(url);
-    
+
     // Create post info object
-    const postInfo: InstagramPostInfo = {
-      reelId: shortcode,
-      username,
-      caption,
-      mediaItems: []
-    };
+    const postInfo = createPostInfo(shortcode, username, caption);
 
     // Add video or image
     if (videoUrl) {
-      // Make sure the URL is properly formatted
-      if (videoUrl.startsWith('//')) {
-        videoUrl = `https:${videoUrl}`;
-      } else if (videoUrl.startsWith('/')) {
-        videoUrl = `https://www.instagram.com${videoUrl}`;
-      }
-      
-      // Clean up any encoded characters
-      videoUrl = videoUrl.replace(/\\u0026/g, '&')
-                         .replace(/\\u003c/g, '<')
-                         .replace(/\\u003e/g, '>')
-                         .replace(/\\\//g, '/');
-      
-      postInfo.mediaItems.push({
-        type: 'video',
-        url: videoUrl,
-        thumbnailUrl: thumbnailUrl
-      });
+      addMediaItem(postInfo, 'video', videoUrl, thumbnailUrl);
     } else if (thumbnailUrl) {
-      if (thumbnailUrl.startsWith('//')) {
-        thumbnailUrl = `https:${thumbnailUrl}`;
-      }
-      
-      postInfo.mediaItems.push({
-        type: 'image',
-        url: thumbnailUrl,
-        thumbnailUrl: thumbnailUrl
-      });
+      addMediaItem(postInfo, 'image', thumbnailUrl, thumbnailUrl);
     }
 
     // Download all media items

@@ -1,8 +1,14 @@
 import axios from 'axios';
-import * as path from 'path';
 import * as cheerio from 'cheerio';
 import { InstagramPostInfo, DownloadOptions } from '../types.js';
-import { downloadMediaItems, extractShortcode } from './common.js';
+import {
+  downloadMediaItems,
+  extractShortcode,
+  getDefaultOutputDir,
+  getFirefoxHeaders,
+  createPostInfo,
+  addMediaItem
+} from './common.js';
 
 /**
  * Third method to download Instagram media
@@ -12,28 +18,14 @@ export async function downloadInstagramMediaMethod3(
   url: string, 
   options: DownloadOptions = {}
 ): Promise<InstagramPostInfo> {
-  const { outputDir = path.join(process.cwd(), 'public') } = options;
+  const { outputDir = getDefaultOutputDir() } = options;
   
   try {
     console.log('Attempting method 3: Web scraper approach');
     
     // Use a different user agent and headers to mimic a different browser
     const response = await axios.get(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:125.0) Gecko/20100101 Firefox/125.0',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'DNT': '1',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1',
-        'Sec-Fetch-Dest': 'document',
-        'Sec-Fetch-Mode': 'navigate',
-        'Sec-Fetch-Site': 'none',
-        'Sec-Fetch-User': '?1',
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache'
-      },
+      headers: getFirefoxHeaders(),
       maxRedirects: 5,
       timeout: 30000
     });
@@ -65,7 +57,7 @@ export async function downloadInstagramMediaMethod3(
 
     // If meta tags didn't work, try script tag extraction with cheerio
     if (!videoUrl) {
-      $('script').each((i, script) => {
+      $('script').each((_, script) => {
         const content = $(script).html() || '';
         
         // Look for various video URL patterns
@@ -89,7 +81,7 @@ export async function downloadInstagramMediaMethod3(
 
     // Try to extract additional metadata from scripts
     if (!thumbnailUrl || username === 'unknown_user' || !caption) {
-      $('script').each((i, script) => {
+      $('script').each((_, script) => {
         const content = $(script).html() || '';
         
         // Look for thumbnail URL
@@ -147,7 +139,7 @@ export async function downloadInstagramMediaMethod3(
     // Try to extract from HTML attributes and data attributes
     if (!videoUrl) {
       const videoElements = $('video, [data-video-url], [data-src*=".mp4"]');
-      videoElements.each((i, element) => {
+      videoElements.each((_, element) => {
         const $el = $(element);
         videoUrl = $el.attr('src') ||
                    $el.attr('data-src') ||
@@ -203,45 +195,15 @@ export async function downloadInstagramMediaMethod3(
 
     // Extract the post ID from the URL
     const shortcode = extractShortcode(url);
-    
+
     // Create post info object
-    const postInfo: InstagramPostInfo = {
-      reelId: shortcode,
-      username,
-      caption,
-      mediaItems: []
-    };
+    const postInfo = createPostInfo(shortcode, username, caption);
 
     // Add video or image
     if (videoUrl) {
-      // Make sure the URL is properly formatted
-      if (videoUrl.startsWith('//')) {
-        videoUrl = `https:${videoUrl}`;
-      } else if (videoUrl.startsWith('/')) {
-        videoUrl = `https://www.instagram.com${videoUrl}`;
-      }
-      
-      // Clean up any encoded characters
-      videoUrl = videoUrl.replace(/\\u0026/g, '&')
-                         .replace(/\\u003c/g, '<')
-                         .replace(/\\u003e/g, '>')
-                         .replace(/\\\//g, '/');
-      
-      postInfo.mediaItems.push({
-        type: 'video',
-        url: videoUrl,
-        thumbnailUrl: thumbnailUrl || undefined
-      });
+      addMediaItem(postInfo, 'video', videoUrl, thumbnailUrl);
     } else if (thumbnailUrl) {
-      if (thumbnailUrl.startsWith('//')) {
-        thumbnailUrl = `https:${thumbnailUrl}`;
-      }
-      
-      postInfo.mediaItems.push({
-        type: 'image',
-        url: thumbnailUrl,
-        thumbnailUrl: thumbnailUrl || undefined
-      });
+      addMediaItem(postInfo, 'image', thumbnailUrl, thumbnailUrl);
     }
 
     // Download all media items

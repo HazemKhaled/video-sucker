@@ -134,21 +134,71 @@ export function extractShortcode(url: string): string {
   return shortcode;
 }
 
+
+
 /**
- * Common headers for Instagram requests
+ * Get mobile headers for Instagram requests
  */
-export const COMMON_HEADERS = {
-  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-  'Accept-Language': 'en-US,en;q=0.9',
-  'Accept-Encoding': 'gzip, deflate, br',
-  'Connection': 'keep-alive',
-  'Upgrade-Insecure-Requests': '1',
-  'Sec-Fetch-Dest': 'document',
-  'Sec-Fetch-Mode': 'navigate',
-  'Sec-Fetch-Site': 'none',
-  'Sec-Fetch-User': '?1',
-  'Cache-Control': 'max-age=0'
-};
+export function getMobileHeaders(userAgent?: string) {
+  return {
+    'User-Agent': userAgent || 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+    'Referer': 'https://www.google.com/',
+    'sec-ch-ua': '"Not/A)Brand";v="99", "Google Chrome";v="125", "Chromium";v="125"',
+    'sec-ch-ua-mobile': '?1',
+    'sec-ch-ua-platform': '"iOS"',
+    'Sec-Fetch-Site': 'none',
+    'Sec-Fetch-Mode': 'navigate',
+    'Sec-Fetch-User': '?1',
+    'Sec-Fetch-Dest': 'document',
+    'Upgrade-Insecure-Requests': '1',
+    'Cache-Control': 'no-cache',
+    'Pragma': 'no-cache'
+  };
+}
+
+/**
+ * Get desktop headers for Instagram requests
+ */
+export function getDesktopHeaders() {
+  return {
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+    'sec-ch-ua': '"Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="8"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"macOS"',
+    'Sec-Fetch-Site': 'none',
+    'Sec-Fetch-Mode': 'navigate',
+    'Sec-Fetch-User': '?1',
+    'Sec-Fetch-Dest': 'document',
+    'Upgrade-Insecure-Requests': '1',
+    'Cache-Control': 'no-cache',
+    'Pragma': 'no-cache'
+  };
+}
+
+/**
+ * Get Firefox headers for Instagram requests
+ */
+export function getFirefoxHeaders() {
+  return {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:125.0) Gecko/20100101 Firefox/125.0',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+    'Accept-Language': 'en-US,en;q=0.5',
+    'Accept-Encoding': 'gzip, deflate, br',
+    'DNT': '1',
+    'Connection': 'keep-alive',
+    'Upgrade-Insecure-Requests': '1',
+    'Sec-Fetch-Dest': 'document',
+    'Sec-Fetch-Mode': 'navigate',
+    'Sec-Fetch-Site': 'none',
+    'Sec-Fetch-User': '?1',
+    'Cache-Control': 'no-cache',
+    'Pragma': 'no-cache'
+  };
+}
 
 /**
  * Common video URL patterns for Instagram
@@ -177,8 +227,68 @@ export function cleanVideoUrl(url: string): string {
  * Filter valid video URLs
  */
 export function filterValidVideoUrls(urls: string[]): string[] {
-  return urls.filter(url => 
-    url.includes('.mp4') && 
+  return urls.filter(url =>
+    url.includes('.mp4') &&
     (url.includes('scontent') || url.includes('cdninstagram') || url.includes('fbcdn'))
   );
+}
+
+/**
+ * Get default output directory
+ */
+export function getDefaultOutputDir(): string {
+  return path.join(process.cwd(), 'public');
+}
+
+/**
+ * Normalize video URL by fixing protocol and encoding issues
+ */
+export function normalizeVideoUrl(url: string): string {
+  let normalizedUrl = url;
+
+  // Fix protocol
+  if (normalizedUrl.startsWith('//')) {
+    normalizedUrl = `https:${normalizedUrl}`;
+  } else if (normalizedUrl.startsWith('/')) {
+    normalizedUrl = `https://www.instagram.com${normalizedUrl}`;
+  }
+
+  // Clean up encoded characters
+  normalizedUrl = normalizedUrl.replace(/\\u0026/g, '&')
+                               .replace(/\\u003c/g, '<')
+                               .replace(/\\u003e/g, '>')
+                               .replace(/\\\//g, '/');
+
+  return normalizedUrl;
+}
+
+/**
+ * Create a standardized PostInfo object
+ */
+export function createPostInfo(shortcode: string, username: string = 'unknown_user', caption: string = ''): InstagramPostInfo {
+  return {
+    reelId: shortcode,
+    username,
+    caption,
+    mediaItems: []
+  };
+}
+
+/**
+ * Add media item to post info with proper URL normalization
+ */
+export function addMediaItem(
+  postInfo: InstagramPostInfo,
+  type: 'video' | 'image',
+  url: string,
+  thumbnailUrl?: string | null
+): void {
+  const normalizedUrl = normalizeVideoUrl(url);
+  const normalizedThumbnailUrl = thumbnailUrl ? normalizeVideoUrl(thumbnailUrl) : undefined;
+
+  postInfo.mediaItems.push({
+    type,
+    url: normalizedUrl,
+    thumbnailUrl: normalizedThumbnailUrl
+  });
 }

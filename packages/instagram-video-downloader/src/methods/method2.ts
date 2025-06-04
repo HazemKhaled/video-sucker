@@ -1,7 +1,13 @@
 import axios from 'axios';
-import * as path from 'path';
 import { InstagramPostInfo, DownloadOptions } from '../types.js';
-import { downloadMediaItems, extractShortcode } from './common.js';
+import {
+  downloadMediaItems,
+  extractShortcode,
+  getDefaultOutputDir,
+  getDesktopHeaders,
+  createPostInfo,
+  addMediaItem
+} from './common.js';
 
 /**
  * Second method to download Instagram media
@@ -11,28 +17,14 @@ export async function downloadInstagramMediaMethod2(
   url: string, 
   options: DownloadOptions = {}
 ): Promise<InstagramPostInfo> {
-  const { outputDir = path.join(process.cwd(), 'public') } = options;
+  const { outputDir = getDefaultOutputDir() } = options;
   
   try {
     console.log('Attempting method 2: Alternative extraction');
     
     // Use a different approach with a modern desktop browser user agent and additional headers
     const response = await axios.get(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-        'sec-ch-ua': '"Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="8"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-ch-ua-platform': '"macOS"',
-        'Sec-Fetch-Site': 'none',
-        'Sec-Fetch-Mode': 'navigate',
-        'Sec-Fetch-User': '?1',
-        'Sec-Fetch-Dest': 'document',
-        'Upgrade-Insecure-Requests': '1',
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache'
-      },
+      headers: getDesktopHeaders(),
       maxRedirects: 5,
       timeout: 30000
     });
@@ -50,7 +42,7 @@ export async function downloadInstagramMediaMethod2(
     let caption = '';
 
     // Try to extract from script tags with different patterns
-    const scriptMatches = html.match(/<script[^>]*>.*?<\/script>/gs) || [];
+    const scriptMatches = html.match(/<script[^>]*>[\s\S]*?<\/script>/g) || [];
     
     for (const script of scriptMatches) {
       // Look for JSON data in scripts
@@ -218,45 +210,15 @@ export async function downloadInstagramMediaMethod2(
 
     // Extract the post ID from the URL
     const shortcode = extractShortcode(url);
-    
+
     // Create post info object
-    const postInfo: InstagramPostInfo = {
-      reelId: shortcode,
-      username,
-      caption,
-      mediaItems: []
-    };
+    const postInfo = createPostInfo(shortcode, username, caption);
 
     // Add video or image
     if (videoUrl) {
-      // Make sure the URL is properly formatted
-      if (videoUrl.startsWith('//')) {
-        videoUrl = `https:${videoUrl}`;
-      } else if (videoUrl.startsWith('/')) {
-        videoUrl = `https://www.instagram.com${videoUrl}`;
-      }
-      
-      // Clean up any encoded characters
-      videoUrl = videoUrl.replace(/\\u0026/g, '&')
-                         .replace(/\\u003c/g, '<')
-                         .replace(/\\u003e/g, '>')
-                         .replace(/\\\//g, '/');
-      
-      postInfo.mediaItems.push({
-        type: 'video',
-        url: videoUrl,
-        thumbnailUrl: thumbnailUrl
-      });
+      addMediaItem(postInfo, 'video', videoUrl, thumbnailUrl);
     } else if (thumbnailUrl) {
-      if (thumbnailUrl.startsWith('//')) {
-        thumbnailUrl = `https:${thumbnailUrl}`;
-      }
-      
-      postInfo.mediaItems.push({
-        type: 'image',
-        url: thumbnailUrl,
-        thumbnailUrl: thumbnailUrl
-      });
+      addMediaItem(postInfo, 'image', thumbnailUrl, thumbnailUrl);
     }
 
     // Download all media items
